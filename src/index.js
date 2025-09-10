@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 8082;
 
 connectDB()
   .then(() => {
-    app.listen(PORT, "0.0.0.0", () => {
+    app.listen(PORT, () => {
       console.log(`Server is running on port ${process.env.PORT}`);
 
       // Initialize scheduler service after server starts
