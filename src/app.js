@@ -7,12 +7,12 @@ const app = express();
 const corsOptions = {
   origin: [
     "http://localhost:3000",
+    "https://earncorecommunity-ge8fw6570-mdhasib01s-projects.vercel.app",
     "http://localhost:5173",
     "https://earncorecommunity.yochrisgray.com",
     "https://www.earncorecommunity.yochrisgray.com",
     "https://www.yochrisgray.com",
     "https://yochrisgray.com",
-    "https://earncorecommunity-ge8fw6570-mdhasib01s-projects.vercel.app",
   ],
   credentials: true,
   optionsSuccessStatus: 200,
