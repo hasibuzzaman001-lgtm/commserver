@@ -8,10 +8,10 @@ const corsOptions = {
   origin: [
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://earncorecommunity.yochrisgray.com/",
+    "https://earncorecommunity.yochrisgray.com",
     "https://www.earncorecommunity.yochrisgray.com",
     "https://www.yochrisgray.com/",
-    "https://yochrisgray.com/",
+    "https://yochrisgray.com",
   ],
   credentials: true,
   optionsSuccessStatus: 200,
