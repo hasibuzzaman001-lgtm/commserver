@@ -3,7 +3,9 @@ import { Community } from "../models/community.model.js";
 const communitiesData = [
   {
     name: "Entrepreneurs Hub",
-    description: "A community for entrepreneurs to share insights, experiences, and connect with like-minded individuals.",
+    slug: "entrepreneurs-hub",
+    description:
+      "A community for entrepreneurs to share insights, experiences, and connect with like-minded individuals.",
     category: "entrepreneurs",
     scrapingPlatforms: [
       {
@@ -27,7 +29,9 @@ const communitiesData = [
   },
   {
     name: "Startup Central",
-    description: "Everything about startups - from ideation to scaling, funding to exit strategies.",
+    slug: "startup-central",
+    description:
+      "Everything about startups - from ideation to scaling, funding to exit strategies.",
     category: "startups",
     scrapingPlatforms: [
       {
@@ -51,13 +55,20 @@ const communitiesData = [
   },
   {
     name: "Small Business Network",
-    description: "Supporting small business owners with practical advice, resources, and community support.",
+    slug: "small-business-network",
+    description:
+      "Supporting small business owners with practical advice, resources, and community support.",
     category: "small-business",
     scrapingPlatforms: [
       {
         platform: "reddit",
         sourceUrl: "https://www.reddit.com/r/smallbusiness",
-        keywords: ["small business", "local business", "operations", "customers"],
+        keywords: [
+          "small business",
+          "local business",
+          "operations",
+          "customers",
+        ],
         isActive: true,
       },
       {
@@ -75,7 +86,9 @@ const communitiesData = [
   },
   {
     name: "Business Strategy Forum",
-    description: "Discussing business strategies, market analysis, and corporate decision-making.",
+    slug: "business-strategy-forum",
+    description:
+      "Discussing business strategies, market analysis, and corporate decision-making.",
     category: "business-general",
     scrapingPlatforms: [
       {
@@ -87,7 +100,12 @@ const communitiesData = [
       {
         platform: "medium",
         sourceUrl: "https://medium.com/topic/business",
-        keywords: ["business strategy", "corporate", "management", "leadership"],
+        keywords: [
+          "business strategy",
+          "corporate",
+          "management",
+          "leadership",
+        ],
         isActive: true,
       },
     ],
@@ -99,13 +117,21 @@ const communitiesData = [
   },
   {
     name: "Marketing Masters",
-    description: "Digital marketing strategies, campaigns, and growth hacking techniques.",
+    slug: "marketing-masters",
+    description:
+      "Digital marketing strategies, campaigns, and growth hacking techniques.",
     category: "marketing",
     scrapingPlatforms: [
       {
         platform: "reddit",
         sourceUrl: "https://www.reddit.com/r/marketing",
-        keywords: ["marketing", "digital marketing", "seo", "social media", "advertising"],
+        keywords: [
+          "marketing",
+          "digital marketing",
+          "seo",
+          "social media",
+          "advertising",
+        ],
         isActive: true,
       },
       {
@@ -123,13 +149,21 @@ const communitiesData = [
   },
   {
     name: "SaaS Builders",
-    description: "Community for SaaS entrepreneurs, developers, and business owners.",
+    slug: "saas-builders",
+    description:
+      "Community for SaaS entrepreneurs, developers, and business owners.",
     category: "saas-owners",
     scrapingPlatforms: [
       {
         platform: "reddit",
         sourceUrl: "https://www.reddit.com/r/SaaS",
-        keywords: ["saas", "software", "subscription", "recurring revenue", "b2b"],
+        keywords: [
+          "saas",
+          "software",
+          "subscription",
+          "recurring revenue",
+          "b2b",
+        ],
         isActive: true,
       },
       {
@@ -147,7 +181,9 @@ const communitiesData = [
   },
   {
     name: "E-commerce Excellence",
-    description: "Online retail strategies, e-commerce platforms, and digital commerce trends.",
+    slug: "e-commerce-excellence",
+    description:
+      "Online retail strategies, e-commerce platforms, and digital commerce trends.",
     category: "e-commerce",
     scrapingPlatforms: [
       {
@@ -159,7 +195,12 @@ const communitiesData = [
       {
         platform: "medium",
         sourceUrl: "https://medium.com/topic/ecommerce",
-        keywords: ["ecommerce", "online retail", "digital commerce", "marketplace"],
+        keywords: [
+          "ecommerce",
+          "online retail",
+          "digital commerce",
+          "marketplace",
+        ],
         isActive: true,
       },
     ],
@@ -171,7 +212,9 @@ const communitiesData = [
   },
   {
     name: "Sales Professionals",
-    description: "Sales techniques, customer relationship management, and revenue growth strategies.",
+    slug: "sales-professionals",
+    description:
+      "Sales techniques, customer relationship management, and revenue growth strategies.",
     category: "sales",
     scrapingPlatforms: [
       {
@@ -195,13 +238,21 @@ const communitiesData = [
   },
   {
     name: "Personal Finance Hub",
-    description: "Personal finance advice, investment strategies, and wealth building tips.",
+    slug: "personal-finance-hub",
+    description:
+      "Personal finance advice, investment strategies, and wealth building tips.",
     category: "personal-finance",
     scrapingPlatforms: [
       {
         platform: "reddit",
         sourceUrl: "https://www.reddit.com/r/personalfinance",
-        keywords: ["personal finance", "investing", "budgeting", "savings", "retirement"],
+        keywords: [
+          "personal finance",
+          "investing",
+          "budgeting",
+          "savings",
+          "retirement",
+        ],
         isActive: true,
       },
       {
@@ -219,13 +270,21 @@ const communitiesData = [
   },
   {
     name: "Business Ideas Lab",
-    description: "Innovative business ideas, market opportunities, and entrepreneurial inspiration.",
+    slug: "business-ideas-lab",
+    description:
+      "Innovative business ideas, market opportunities, and entrepreneurial inspiration.",
     category: "business-ideas",
     scrapingPlatforms: [
       {
         platform: "reddit",
         sourceUrl: "https://www.reddit.com/r/businessideas",
-        keywords: ["business ideas", "opportunity", "innovation", "market gap", "startup idea"],
+        keywords: [
+          "business ideas",
+          "opportunity",
+          "innovation",
+          "market gap",
+          "startup idea",
+        ],
         isActive: true,
       },
       {
@@ -246,18 +305,22 @@ const communitiesData = [
 export async function seedCommunities() {
   try {
     console.log("Seeding communities...");
-    
+
     // Check if communities already exist
     const existingCount = await Community.countDocuments();
     if (existingCount > 0) {
-      console.log(`Communities already exist (${existingCount} found). Skipping seed.`);
+      console.log(
+        `Communities already exist (${existingCount} found). Skipping seed.`
+      );
       return;
     }
-    
+
     // Insert communities
     const createdCommunities = await Community.insertMany(communitiesData);
-    console.log(`✅ Successfully seeded ${createdCommunities.length} communities`);
-    
+    console.log(
+      `✅ Successfully seeded ${createdCommunities.length} communities`
+    );
+
     return createdCommunities;
   } catch (error) {
     console.error("❌ Error seeding communities:", error);

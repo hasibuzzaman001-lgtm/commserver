@@ -22,18 +22,18 @@ const getAllPosts = asyncHandler(async (req, res) => {
 
   // Build match conditions
   const matchConditions = { status: "active" };
-  
+
   if (community && isValidObjectId(community)) {
     matchConditions.community = new mongoose.Types.ObjectId(community);
   }
-  
+
   if (platform) {
     matchConditions.platform = platform;
   }
-  
+
   if (minQualityScore > 0) {
-    matchConditions["scrapingMetadata.qualityScore"] = { 
-      $gte: parseFloat(minQualityScore) 
+    matchConditions["scrapingMetadata.qualityScore"] = {
+      $gte: parseFloat(minQualityScore),
     };
   }
 
@@ -360,11 +360,87 @@ const getPostsByPlatform = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(
-        200,
-        posts,
-        `Posts from ${platform} fetched successfully`
-      )
+      new ApiResponse(200, posts, `Posts from ${platform} fetched successfully`)
+    );
+});
+const getPostsByCommunity = asyncHandler(async (req, res) => {
+  const { platform } = req.params;
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortType = "desc",
+  } = req.query;
+
+  const validPlatforms = Community.name;
+  if (!validPlatforms.includes(platform)) {
+    throw new ApiError(400, "Invalid platform");
+  }
+
+  const pipeline = [
+    {
+      $match: {
+        platform: platform,
+        status: "active",
+      },
+    },
+    {
+      $lookup: {
+        from: "communities",
+        localField: "community",
+        foreignField: "_id",
+        as: "community",
+        pipeline: [
+          {
+            $project: {
+              name: 1,
+              category: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline: [
+          {
+            $project: {
+              username: 1,
+              fullName: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        community: { $first: "$community" },
+        owner: { $first: "$owner" },
+      },
+    },
+  ];
+
+  // Sort
+  const sortOrder = sortType === "asc" ? 1 : -1;
+  pipeline.push({ $sort: { [sortBy]: sortOrder } });
+
+  const postAggregate = Post.aggregate(pipeline);
+  const options = {
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
+  };
+
+  const posts = await Post.aggregatePaginate(postAggregate, options);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, posts, `Posts from ${platform} fetched successfully`)
     );
 });
 
@@ -412,7 +488,12 @@ const getPostStats = asyncHandler(async (req, res) => {
                           $add: [
                             {
                               $ifNull: [
-                                { $getField: { field: "$$this", input: "$$value" } },
+                                {
+                                  $getField: {
+                                    field: "$$this",
+                                    input: "$$value",
+                                  },
+                                },
                                 0,
                               ],
                             },
@@ -436,12 +517,15 @@ const getPostStats = asyncHandler(async (req, res) => {
     },
   ]);
 
-  const result = stats.length > 0 ? stats[0] : {
-    totalPosts: 0,
-    platformStats: {},
-    avgQualityScore: 0,
-    totalEngagement: 0,
-  };
+  const result =
+    stats.length > 0
+      ? stats[0]
+      : {
+          totalPosts: 0,
+          platformStats: {},
+          avgQualityScore: 0,
+          totalEngagement: 0,
+        };
 
   return res
     .status(200)

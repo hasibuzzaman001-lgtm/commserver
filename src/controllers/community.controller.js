@@ -1,32 +1,64 @@
-{
-  "name": "video_sharing_platform_backend",
-  "version": "1.0.0",
-  "description": "",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^3.1.10",
-    "prettier": "^3.6.2"
-  },
-  "dependencies": {
-    "axios": "^1.11.0",
-    "bcrypt": "^6.0.0",
-    "cheerio": "^1.1.2",
-    "cloudinary": "^2.7.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.0",
-    "mongoose-aggregate-paginate-v2": "^1.1.4",
-    "multer": "^2.0.2",
-    "node-cron": "^4.2.1"
+import { Community } from "../models/community.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+
+const createCommunity = asyncHandler(async (req, res) => {
+  const { name, description, category } = req.body;
+
+  const iconLocalPath = req.file?.path;
+
+  if (!iconLocalPath) {
+    throw new ApiError(400, "Icon file is required");
   }
-}
+  const icon = await uploadOnCloudinary(iconLocalPath);
+  if (!icon) {
+    throw new ApiError(400, "Icon file is required");
+  }
+
+  if (!name?.trim()) {
+    throw new ApiError(400, "Community name is required");
+  }
+
+  const slug = name.toLowerCase().replace(/\s+/g, "-");
+  const existingCommunity = await Community.findOne({ slug });
+  if (existingCommunity) {
+    throw new ApiError(400, "Community name already exists");
+  }
+
+  if (!description?.trim()) {
+    throw new ApiError(400, "Community description is required");
+  }
+
+  if (!category?.trim()) {
+    throw new ApiError(400, "Community category is required");
+  }
+
+  const community = await Community.create({
+    name: name.trim(),
+    slug: slug,
+    icon: icon.url,
+    description: description.trim(),
+    category: category.trim(),
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, community, "Community created successfully"));
+});
+
+const gettAllCommunity = asyncHandler(async (req, res) => {
+  const communities = await Community.find(
+    {},
+    { name: 1, description: 1, category: 1, lastUpdatedAt: 1, icon: 1 }
+  ).sort({ lastUpdatedAt: -1 });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, communities, "Communities fetched successfully")
+    );
+});
+
+export { gettAllCommunity, createCommunity };

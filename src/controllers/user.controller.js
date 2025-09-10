@@ -138,10 +138,12 @@ const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
+  const options =
+    process.env.NODE_ENV === "production"
+      ? { httpOnly: true, secure: true }
+      : {
+          httpOnly: true,
+        };
 
   return res
     .status(200)
@@ -250,7 +252,26 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
+export const checkValidUser = async (req, res) => {
+  try {
+    const token =
+      req.cookies["accessToken"] || req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+    const user = await User.findById(decodedToken._id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    res.json({ message: "User is valid", user, isValid: true });
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
+};
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)

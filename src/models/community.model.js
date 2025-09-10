@@ -10,6 +10,19 @@ const communitySchema = new Schema(
       trim: true,
       index: true,
     },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      index: true,
+    },
+    icon: {
+      type: String,
+      required: true,
+      default:
+        "http://res.cloudinary.com/mdhasib/image/upload/v1757133279/jhjgy8r5uuellcbqmts7.png",
+    },
     description: {
       type: String,
       required: true,
