@@ -5,41 +5,11 @@ import cookieParser from "cookie-parser";
 const app = express();
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    const allowedOrigins = [
-      "http://localhost:3000",
-      "https://earncorecommunity-ge8fw6570-mdhasib01s-projects.vercel.app",
-      "https://earncorecommunity.yochrisgray.com",
-      "https://www.earncorecommunity.yochrisgray.com",
-      "https://www.yochrisgray.com",
-      "https://yochrisgray.com",
-    ];
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: true,
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Accept",
-    "Origin",
-    "Cache-Control",
-    "X-File-Name",
-  ],
-  exposedHeaders: ["Set-Cookie"],
 };
 
-// Apply CORS before other middleware
 app.use(cors(corsOptions));
 
 // app.options("*", cors(corsOptions));
