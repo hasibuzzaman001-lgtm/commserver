@@ -10,7 +10,7 @@ const corsOptions = {
     "http://localhost:5173",
     "https://earncorecommunity.yochrisgray.com",
     "https://www.earncorecommunity.yochrisgray.com",
-    "https://www.yochrisgray.com/",
+    "https://www.yochrisgray.com",
     "https://yochrisgray.com",
   ],
   credentials: true,
