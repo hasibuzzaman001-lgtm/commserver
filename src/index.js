@@ -6,14 +6,15 @@ import { schedulerService } from "./services/SchedulerService.js";
 dotenv.config({
   path: "./.env",
 });
+const PORT = process.env.PORT || 8082;
 
 connectDB()
   .then(() => {
-    app.listen(process.env.PORT || 8000, () => {
+    app.listen(PORT, "127.0.0.1", () => {
       console.log(`Server is running on port ${process.env.PORT}`);
-      
+
       // Initialize scheduler service after server starts
-      schedulerService.initialize().catch(error => {
+      schedulerService.initialize().catch((error) => {
         console.error("Failed to initialize scheduler service:", error);
       });
     });
