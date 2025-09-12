@@ -23,7 +23,12 @@ const postSchema = new Schema(
       originalAuthor: String,
       originalCreatedAt: Date,
       qualityScore: { type: Number, min: 0, max: 1, default: 0.5 },
+      authenticityScore: { type: Number, min: 0, max: 1, default: 0.5 },
       tags: [String],
+      contentType: { type: String, enum: ["educational", "news", "discussion", "experience", "insights", "general"], default: "general" },
+      isAuthentic: { type: Boolean, default: false },
+      validationMethod: String,
+      contentFingerprint: String,
     },
 
     status: { type: String, enum: ["active", "hidden", "flagged", "deleted"], default: "active", index: true },

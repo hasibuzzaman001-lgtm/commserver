@@ -69,6 +69,131 @@ class ContentProcessor {
   }
 
   /**
+   * Process authentic content with enhanced validation
+   */
+  processAuthenticContent(content) {
+    const processed = this.processContent(content);
+    
+    // Add authenticity-specific processing
+    processed.contentType = this.classifyContentType(content);
+    processed.authorInfo = this.processAuthorInfo(content);
+    processed.engagementAnalysis = this.analyzeEngagement(content);
+    processed.contentFingerprint = this.generateContentFingerprint(content);
+    
+    return processed;
+  }
+
+  /**
+   * Classify content type more accurately
+   */
+  classifyContentType(content) {
+    const text = `${content.title || ''} ${content.content || ''}`.toLowerCase();
+    
+    // Educational content
+    if (text.includes('how to') || text.includes('tutorial') || text.includes('learn') || text.includes('guide')) {
+      return 'educational';
+    }
+    
+    // News content
+    if (text.includes('breaking') || text.includes('announced') || text.includes('reports') || text.includes('according to')) {
+      return 'news';
+    }
+    
+    // Discussion/Question
+    if (text.includes('what do you think') || text.includes('thoughts?') || text.includes('discuss') || text.includes('question')) {
+      return 'discussion';
+    }
+    
+    // Personal experience
+    if (text.includes('my experience') || text.includes('i learned') || text.includes('personal story') || text.includes('journey')) {
+      return 'experience';
+    }
+    
+    // Industry insights
+    if (text.includes('industry') || text.includes('market') || text.includes('trends') || text.includes('analysis')) {
+      return 'insights';
+    }
+    
+    return 'general';
+  }
+
+  /**
+   * Process author information
+   */
+  processAuthorInfo(content) {
+    return {
+      name: content.author || 'Unknown',
+      platform: content.platform,
+      verified: content.verified || false,
+      followerCount: content.followerCount || 0,
+      accountAge: content.accountAge || null,
+    };
+  }
+
+  /**
+   * Analyze engagement patterns
+   */
+  analyzeEngagement(content) {
+    const likes = content.likes || 0;
+    const comments = content.comments || 0;
+    const shares = content.shares || 0;
+    const views = content.views || 0;
+    
+    const totalEngagement = likes + comments + shares;
+    const engagementRate = views > 0 ? (totalEngagement / views) * 100 : 0;
+    
+    return {
+      total: totalEngagement,
+      rate: engagementRate,
+      likesToComments: comments > 0 ? likes / comments : likes,
+      sharesToLikes: likes > 0 ? shares / likes : 0,
+      quality: this.assessEngagementQuality(likes, comments, shares, views),
+    };
+  }
+
+  /**
+   * Assess engagement quality
+   */
+  assessEngagementQuality(likes, comments, shares, views) {
+    let quality = 'low';
+    
+    // High engagement with good comment ratio
+    if (likes > 50 && comments > 5 && comments / likes > 0.05) {
+      quality = 'high';
+    } else if (likes > 20 && comments > 2) {
+      quality = 'medium';
+    }
+    
+    // Boost quality if there are shares
+    if (shares > 0 && quality !== 'high') {
+      quality = quality === 'medium' ? 'high' : 'medium';
+    }
+    
+    return quality;
+  }
+
+  /**
+   * Generate content fingerprint for duplicate detection
+   */
+  generateContentFingerprint(content) {
+    const text = `${content.title || ''} ${content.content || ''}`;
+    const normalized = text.toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    // Simple hash function for fingerprinting
+    let hash = 0;
+    for (let i = 0; i < normalized.length; i++) {
+      const char = normalized.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    
+    return Math.abs(hash).toString(36);
+  }
+
+  /**
    * Process and clean scraped content
    */
   processContent(content) {
