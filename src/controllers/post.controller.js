@@ -22,6 +22,11 @@ const getAllPosts = asyncHandler(async (req, res) => {
 
   // Build match conditions
   const matchConditions = { status: "active" };
+  
+  // Prioritize authentic content
+  if (req.query.authentic !== 'false') {
+    matchConditions["scrapingMetadata.isAuthentic"] = true;
+  }
 
   if (community && isValidObjectId(community)) {
     matchConditions.community = new mongoose.Types.ObjectId(community);
