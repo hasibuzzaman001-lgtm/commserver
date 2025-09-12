@@ -9,6 +9,141 @@ class RedditScraper {
   }
 
   /**
+   * Scrape authentic content from Reddit with enhanced validation
+   */
+  async scrapeAuthenticContent(config) {
+    const { sourceUrl, keywords = [], maxPosts = 50, authenticityMode = true } = config;
+    
+    try {
+      console.log(`🔍 Scraping authentic Reddit content: ${sourceUrl}`);
+      
+      const subreddit = this.extractSubreddit(sourceUrl);
+      if (!subreddit) {
+        throw new Error("Invalid Reddit URL - could not extract subreddit");
+      }
+
+      const posts = [];
+      let after = null;
+      let fetchedCount = 0;
+
+      // Fetch posts with authenticity focus
+      while (fetchedCount < maxPosts * 2) { // Get more to filter for authenticity
+        const batchSize = Math.min(25, maxPosts * 2 - fetchedCount);
+        const batchPosts = await this.fetchAuthenticRedditPosts(subreddit, batchSize, after);
+        
+        if (batchPosts.length === 0) break;
+
+        // Filter for authentic content
+        const authenticPosts = batchPosts.filter(post => this.isAuthenticRedditPost(post));
+        
+        // Apply keyword filtering if provided
+        const filteredPosts = keywords.length > 0 
+          ? authenticPosts.filter(post => this.matchesKeywords(post, keywords))
+          : authenticPosts;
+
+        posts.push(...filteredPosts);
+        fetchedCount += batchPosts.length;
+        
+        after = batchPosts[batchPosts.length - 1]?.name;
+        
+        // Stop if we have enough authentic posts
+        if (posts.length >= maxPosts) break;
+        
+        await this.utils.delay(this.rateLimitDelay);
+      }
+
+      console.log(`✅ Scraped ${posts.length} authentic posts from r/${subreddit}`);
+      return posts.slice(0, maxPosts);
+
+    } catch (error) {
+      console.error("Reddit authentic scraping error:", error.message);
+      throw new Error(`Reddit authentic scraping failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Fetch authentic Reddit posts with enhanced filtering
+   */
+  async fetchAuthenticRedditPosts(subreddit, limit = 25, after = null) {
+    try {
+      const url = `${this.baseUrl}/r/${subreddit}/hot.json`;
+      const params = {
+        limit,
+        raw_json: 1,
+      };
+      
+      if (after) {
+        params.after = after;
+      }
+
+      const response = await axios.get(url, {
+        params,
+        headers: {
+          'User-Agent': 'AuthenticContentBot/2.0 (by /u/CommunityBot)',
+        },
+        timeout: 15000,
+      });
+
+      if (!response.data?.data?.children) {
+        return [];
+      }
+
+      return response.data.data.children
+        .map(child => this.transformRedditPost(child.data))
+        .filter(post => post !== null);
+
+    } catch (error) {
+      if (error.response?.status === 429) {
+        console.log("Rate limited, waiting longer...");
+        await this.utils.delay(10000);
+        return this.fetchAuthenticRedditPosts(subreddit, limit, after);
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Check if Reddit post is authentic
+   */
+  isAuthenticRedditPost(post) {
+    // Filter out deleted/removed posts
+    if (post.author === '[deleted]' || post.content === '[removed]' || post.content === '[deleted]') {
+      return false;
+    }
+
+    // Filter out posts with suspicious patterns
+    if (post.title.includes('[removed]') || post.title.includes('[deleted]')) {
+      return false;
+    }
+
+    // Filter out very low effort posts
+    if (post.title.length < 10 || (post.content && post.content.length < 20)) {
+      return false;
+    }
+
+    // Filter out posts with suspicious engagement (too perfect ratios)
+    if (post.likes > 1000 && post.comments === 0) {
+      return false;
+    }
+
+    // Filter out obvious spam/promotional content
+    const spamIndicators = ['buy now', 'click here', 'limited time', 'free money', 'guaranteed'];
+    const fullText = `${post.title} ${post.content}`.toLowerCase();
+    
+    if (spamIndicators.some(indicator => fullText.includes(indicator))) {
+      return false;
+    }
+
+    // Check for minimum engagement to ensure it's not a bot post
+    if (post.likes < 2 && post.comments === 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Scrape content from Reddit
    */
   async scrapeContent(config) {

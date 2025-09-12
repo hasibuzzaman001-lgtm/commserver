@@ -6,10 +6,25 @@ const postSchema = new Schema(
     title: { type: String, required: true, trim: true, index: true },
     content: { type: String, required: true },
     sourceUrl: { type: String, required: true, unique: true }, // @@ Prevent duplicate posts @@
-    platform: { type: String, required: true, enum: ["reddit", "twitter", "linkedin", "medium"], index: true },
+    platform: {
+      type: String,
+      required: true,
+      enum: ["reddit", "twitter", "linkedin", "medium"],
+      index: true,
+    },
     originalId: { type: String, required: true, index: true },
-    community: { type: Schema.Types.ObjectId, ref: "Community", required: true, index: true },
-    owner: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    community: {
+      type: Schema.Types.ObjectId,
+      ref: "Community",
+      required: true,
+      index: true,
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
 
     engagementMetrics: {
       likes: { type: Number, default: 0 },
@@ -23,10 +38,31 @@ const postSchema = new Schema(
       originalAuthor: String,
       originalCreatedAt: Date,
       qualityScore: { type: Number, min: 0, max: 1, default: 0.5 },
+      authenticityScore: { type: Number, min: 0, max: 1, default: 0.5 },
       tags: [String],
+      contentType: {
+        type: String,
+        enum: [
+          "educational",
+          "news",
+          "discussion",
+          "experience",
+          "insights",
+          "general",
+        ],
+        default: "general",
+      },
+      isAuthentic: { type: Boolean, default: false },
+      validationMethod: String,
+      contentFingerprint: String,
     },
 
-    status: { type: String, enum: ["active", "hidden", "flagged", "deleted"], default: "active", index: true },
+    status: {
+      type: String,
+      enum: ["active", "hidden", "flagged", "deleted"],
+      default: "active",
+      index: true,
+    },
     thumbnail: String, // URL to thumbnail
     mediaUrls: [String],
 

@@ -7,6 +7,7 @@ import { LinkedInScraper } from "./platforms/LinkedInScraper.js";
 import { MediumScraper } from "./platforms/MediumScraper.js";
 import { ScrapingUtils } from "./utils/ScrapingUtils.js";
 import { ContentProcessor } from "./utils/ContentProcessor.js";
+import { ContentValidator } from "./utils/ContentValidator.js";
 
 class ScraperManager {
   constructor() {
@@ -18,6 +19,7 @@ class ScraperManager {
     };
     this.utils = new ScrapingUtils();
     this.contentProcessor = new ContentProcessor();
+    this.contentValidator = new ContentValidator();
   }
 
   /**
@@ -26,10 +28,10 @@ class ScraperManager {
   async scrapeAllCommunities() {
     try {
       console.log("Starting scraping for all communities...");
-      
-      const activeCommunities = await Community.find({ 
+
+      const activeCommunities = await Community.find({
         isActive: true,
-        "scrapingPlatforms.isActive": true 
+        "scrapingPlatforms.isActive": true,
       });
 
       const results = {
@@ -45,16 +47,21 @@ class ScraperManager {
           const communityResult = await this.scrapeCommunity(community._id);
           results.successfulScrapes++;
           results.totalPostsCreated += communityResult.postsCreated;
-          
-          console.log(`✅ Successfully scraped ${community.name}: ${communityResult.postsCreated} posts`);
+
+          console.log(
+            `✅ Successfully scraped ${community.name}: ${communityResult.postsCreated} posts`
+          );
         } catch (error) {
           results.failedScrapes++;
           results.errors.push({
             community: community.name,
             error: error.message,
           });
-          
-          console.error(`❌ Failed to scrape ${community.name}:`, error.message);
+
+          console.error(
+            `❌ Failed to scrape ${community.name}:`,
+            error.message
+          );
         }
       }
 
@@ -77,7 +84,7 @@ class ScraperManager {
       }
 
       console.log(`Scraping community: ${community.name}`);
-      
+
       let totalPostsCreated = 0;
       const platformResults = [];
 
@@ -94,12 +101,16 @@ class ScraperManager {
         try {
           const scraper = this.scrapers[platformConfig.platform];
           if (!scraper) {
-            console.warn(`No scraper available for platform: ${platformConfig.platform}`);
+            console.warn(
+              `No scraper available for platform: ${platformConfig.platform}`
+            );
             continue;
           }
 
-          console.log(`Scraping ${platformConfig.platform} for ${community.name}...`);
-          
+          console.log(
+            `Scraping ${platformConfig.platform} for ${community.name}...`
+          );
+
           const scrapedContent = await scraper.scrapeContent({
             sourceUrl: platformConfig.sourceUrl,
             keywords: platformConfig.keywords,
@@ -120,9 +131,11 @@ class ScraperManager {
             postsCreated,
             success: true,
           });
-
         } catch (platformError) {
-          console.error(`Error scraping ${platformConfig.platform}:`, platformError.message);
+          console.error(
+            `Error scraping ${platformConfig.platform}:`,
+            platformError.message
+          );
           platformResults.push({
             platform: platformConfig.platform,
             postsCreated: 0,
@@ -144,7 +157,6 @@ class ScraperManager {
         postsCreated: totalPostsCreated,
         platformResults,
       };
-
     } catch (error) {
       console.error(`Error scraping community ${communityId}:`, error);
       throw error;
@@ -152,9 +164,249 @@ class ScraperManager {
   }
 
   /**
+   * Scrape authentic content for a specific community
+   * Ensures only original, non-promotional content is collected
+   */
+  async scrapeAuthenticContent(communityId, postsPerPlatform = 2) {
+    try {
+      const community = await Community.findById(communityId);
+      if (!community) {
+        throw new Error("Community not found");
+      }
+
+      console.log(`🔍 Scraping authentic content for: ${community.name}`);
+
+      let totalPostsCreated = 0;
+      const platformResults = [];
+
+      // Get users for random assignment
+      const users = await User.find({ _id: { $exists: true } }).select("_id");
+      if (users.length === 0) {
+        throw new Error("No users found for post assignment");
+      }
+
+      // Scrape from each active platform
+      for (const platformConfig of community.scrapingPlatforms) {
+        if (!platformConfig.isActive) continue;
+
+        try {
+          const scraper = this.scrapers[platformConfig.platform];
+          if (!scraper) {
+            console.warn(
+              `No scraper available for platform: ${platformConfig.platform}`
+            );
+            continue;
+          }
+
+          console.log(
+            `🎯 Scraping ${postsPerPlatform} authentic posts from ${platformConfig.platform}...`
+          );
+
+          // Scrape with authenticity focus
+          const scrapedContent = await scraper.scrapeAuthenticContent({
+            sourceUrl: platformConfig.sourceUrl,
+            keywords: platformConfig.keywords,
+            maxPosts: postsPerPlatform * 3, // Get more to filter for authenticity
+            authenticityMode: true,
+          });
+
+          // Validate and filter authentic content
+          const authenticContent = await this.validateAuthenticContent(
+            scrapedContent,
+            community,
+            postsPerPlatform
+          );
+
+          // Create posts from authentic content
+          const postsCreated = await this.createPostsFromAuthenticContent(
+            authenticContent,
+            community,
+            platformConfig.platform,
+            users
+          );
+
+          totalPostsCreated += postsCreated;
+          platformResults.push({
+            platform: platformConfig.platform,
+            postsCreated,
+            success: true,
+          });
+        } catch (platformError) {
+          console.error(
+            `Error scraping ${platformConfig.platform}:`,
+            platformError.message
+          );
+          platformResults.push({
+            platform: platformConfig.platform,
+            postsCreated: 0,
+            success: false,
+            error: platformError.message,
+          });
+        }
+      }
+
+      // Update community stats
+      await Community.findByIdAndUpdate(communityId, {
+        lastScrapedAt: new Date(),
+        $inc: { postCount: totalPostsCreated },
+      });
+
+      return {
+        communityId,
+        communityName: community.name,
+        totalPosts: totalPostsCreated,
+        platformResults,
+      };
+    } catch (error) {
+      console.error(
+        `Error scraping authentic content for community ${communityId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Validate content for authenticity
+   */
+  async validateAuthenticContent(scrapedContent, community, maxPosts) {
+    const authenticContent = [];
+
+    for (const content of scrapedContent) {
+      try {
+        // Check if content already exists
+        const existingPost = await Post.findOne({
+          $or: [
+            { sourceUrl: content.url },
+            { originalId: content.id, platform: content.platform },
+          ],
+        });
+
+        if (existingPost) {
+          console.log(`⚠️ Duplicate content found, skipping: ${content.id}`);
+          continue;
+        }
+
+        // Validate authenticity
+        const isAuthentic =
+          await this.contentValidator.validateAuthenticity(content);
+        if (!isAuthentic.valid) {
+          console.log(
+            `⚠️ Content failed authenticity check: ${isAuthentic.reason}`
+          );
+          continue;
+        }
+
+        // Calculate quality score
+        const qualityScore =
+          this.contentProcessor.calculateQualityScore(content);
+
+        // Apply higher quality threshold for authentic content
+        const minQualityScore =
+          community.scrapingConfig.qualityThreshold || 0.6;
+        if (qualityScore < minQualityScore) {
+          console.log(
+            `⚠️ Content quality too low (${qualityScore}), skipping...`
+          );
+          continue;
+        }
+
+        authenticContent.push({
+          ...content,
+          qualityScore,
+          authenticityScore: isAuthentic.score,
+        });
+
+        // Stop when we have enough authentic content
+        if (authenticContent.length >= maxPosts) {
+          break;
+        }
+      } catch (error) {
+        console.error(`Error validating content ${content.id}:`, error.message);
+      }
+    }
+
+    console.log(
+      `✅ Validated ${authenticContent.length} authentic posts out of ${scrapedContent.length} scraped`
+    );
+    return authenticContent;
+  }
+
+  /**
+   * Create posts from authentic content with enhanced metadata
+   */
+  async createPostsFromAuthenticContent(
+    authenticContent,
+    community,
+    platform,
+    users
+  ) {
+    let postsCreated = 0;
+
+    for (const content of authenticContent) {
+      try {
+        // Randomly assign a user as the owner
+        const randomUser = users[Math.floor(Math.random() * users.length)];
+
+        // Process content with authenticity focus
+        const processedContent =
+          this.contentProcessor.processAuthenticContent(content);
+
+        // Create the post with enhanced metadata
+        const post = await Post.create({
+          title: processedContent.title,
+          content: processedContent.content,
+          sourceUrl: content.url,
+          platform,
+          originalId: content.id,
+          community: community._id,
+          owner: randomUser._id,
+          engagementMetrics: {
+            likes: content.likes || 0,
+            comments: content.comments || 0,
+            shares: content.shares || 0,
+            views: content.views || 0,
+          },
+          scrapingMetadata: {
+            scrapedAt: new Date(),
+            originalAuthor: content.author,
+            originalCreatedAt: content.createdAt,
+            qualityScore: content.qualityScore,
+            authenticityScore: content.authenticityScore,
+            tags: processedContent.tags,
+            contentType: processedContent.contentType,
+            isAuthentic: true,
+            validationMethod: "enhanced_validation",
+          },
+          thumbnail: content.thumbnail,
+          mediaUrls: processedContent.mediaUrls,
+          status: "active",
+        });
+
+        postsCreated++;
+        console.log(
+          `✅ Created authentic post: ${post.title.substring(0, 50)}...`
+        );
+      } catch (postError) {
+        console.error(
+          `Error creating post from ${content.id}:`,
+          postError.message
+        );
+      }
+    }
+
+    return postsCreated;
+  }
+
+  /**
    * Create posts from scraped content
    */
-  async createPostsFromScrapedContent(scrapedContent, community, platform, users) {
+  async createPostsFromScrapedContent(
+    scrapedContent,
+    community,
+    platform,
+    users
+  ) {
     let postsCreated = 0;
 
     for (const content of scrapedContent) {
@@ -171,11 +423,14 @@ class ScraperManager {
         }
 
         // Process content quality
-        const qualityScore = this.contentProcessor.calculateQualityScore(content);
-        
+        const qualityScore =
+          this.contentProcessor.calculateQualityScore(content);
+
         // Skip low-quality content
         if (qualityScore < (community.scrapingConfig.qualityThreshold || 0.5)) {
-          console.log(`Post ${content.id} quality too low (${qualityScore}), skipping...`);
+          console.log(
+            `Post ${content.id} quality too low (${qualityScore}), skipping...`
+          );
           continue;
         }
 
@@ -214,9 +469,11 @@ class ScraperManager {
 
         postsCreated++;
         console.log(`✅ Created post: ${post.title.substring(0, 50)}...`);
-
       } catch (postError) {
-        console.error(`Error creating post from ${content.id}:`, postError.message);
+        console.error(
+          `Error creating post from ${content.id}:`,
+          postError.message
+        );
       }
     }
 
@@ -228,14 +485,14 @@ class ScraperManager {
    */
   async addNewPlatform(platformConfig) {
     const { name, scraperClass, config } = platformConfig;
-    
+
     if (this.scrapers[name]) {
       throw new Error(`Platform ${name} already exists`);
     }
 
     this.scrapers[name] = new scraperClass(config);
     console.log(`Added new platform scraper: ${name}`);
-    
+
     return true;
   }
 
@@ -287,8 +544,10 @@ class ScraperManager {
       maxPostsPerCommunity = 1000,
     } = options;
 
-    const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
-    
+    const cutoffDate = new Date(
+      Date.now() - olderThanDays * 24 * 60 * 60 * 1000
+    );
+
     // Mark old, low-quality posts as hidden
     const hiddenResult = await Post.updateMany(
       {
@@ -303,7 +562,7 @@ class ScraperManager {
 
     // For each community, keep only the most recent posts
     const communities = await Community.find({ isActive: true });
-    
+
     for (const community of communities) {
       const excessPosts = await Post.find({
         community: community._id,
@@ -314,11 +573,13 @@ class ScraperManager {
 
       if (excessPosts.length > 0) {
         await Post.updateMany(
-          { _id: { $in: excessPosts.map(p => p._id) } },
+          { _id: { $in: excessPosts.map((p) => p._id) } },
           { status: "hidden" }
         );
-        
-        console.log(`Hidden ${excessPosts.length} excess posts from ${community.name}`);
+
+        console.log(
+          `Hidden ${excessPosts.length} excess posts from ${community.name}`
+        );
       }
     }
 
