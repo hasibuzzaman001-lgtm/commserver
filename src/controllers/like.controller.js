@@ -8,7 +8,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const togglePostLike = asyncHandler(async (req, res) => {
   const { postId } = req.params;
+  console.log("postId: ", postId);
   const userId = req.user._id;
+  console.log("userId: ", userId);
 
   if (!isValidObjectId(postId)) {
     throw new ApiError(400, "Invalid post ID");
@@ -38,7 +40,9 @@ const togglePostLike = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { liked: false }, "Post unliked successfully"));
+      .json(
+        new ApiResponse(200, { liked: false }, "Post unliked successfully")
+      );
   } else {
     // Like
     await Like.create({
@@ -142,8 +146,10 @@ const getUserLikedPosts = asyncHandler(async (req, res) => {
     page: parseInt(page, 10),
     limit: parseInt(limit, 10),
   };
-
-  const likedPosts = await Like.aggregatePaginate(likeAggregate, options);
+  const skip = (page - 1) * limit;
+  pipeline.push({ $skip: skip });
+  pipeline.push({ $limit: parseInt(limit, 10) });
+  const likedPosts = await Like.aggregate(pipeline);
 
   return res
     .status(200)
@@ -210,8 +216,4 @@ const getPostLikes = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, likes, "Post likes fetched successfully"));
 });
 
-export {
-  togglePostLike,
-  getUserLikedPosts,
-  getPostLikes,
-};
+export { togglePostLike, getUserLikedPosts, getPostLikes };

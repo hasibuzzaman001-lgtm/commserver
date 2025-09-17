@@ -41,7 +41,13 @@ const toggleBookmark = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { bookmarked: false }, "Post unbookmarked successfully"));
+      .json(
+        new ApiResponse(
+          200,
+          { bookmarked: false },
+          "Post unbookmarked successfully"
+        )
+      );
   } else {
     // Add bookmark
     await Bookmark.create({
@@ -57,12 +63,17 @@ const toggleBookmark = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, { bookmarked: true }, "Post bookmarked successfully"));
+      .json(
+        new ApiResponse(
+          200,
+          { bookmarked: true },
+          "Post bookmarked successfully"
+        )
+      );
   }
 });
 
 const getUserBookmarks = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
   const {
     page = 1,
     limit = 10,
@@ -70,22 +81,20 @@ const getUserBookmarks = asyncHandler(async (req, res) => {
     sortBy = "createdAt",
     sortType = "desc",
   } = req.query;
+  const userId = req.user._id;
 
-  const pipeline = [];
+  const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  // Match conditions
-  const matchConditions = {
-    user: new mongoose.Types.ObjectId(userId),
-  };
-  
-  if (collection) {
-    matchConditions.collection = collection;
-  }
-  
-  pipeline.push({ $match: matchConditions });
+  const pipeline = [
+    // Match bookmarks for current user
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(userId),
+        ...(collection ? { collection } : {}),
+      },
+    },
 
-  // Lookup post details
-  pipeline.push(
+    // Lookup post details
     {
       $lookup: {
         from: "posts",
@@ -94,75 +103,62 @@ const getUserBookmarks = asyncHandler(async (req, res) => {
         as: "post",
         pipeline: [
           { $match: { status: "active" } },
-          {
-            $lookup: {
-              from: "communities",
-              localField: "community",
-              foreignField: "_id",
-              as: "community",
-              pipeline: [
-                {
-                  $project: {
-                    name: 1,
-                    category: 1,
-                  },
-                },
-              ],
-            },
-          },
+
+          // populate owner
           {
             $lookup: {
               from: "users",
               localField: "owner",
               foreignField: "_id",
               as: "owner",
-              pipeline: [
-                {
-                  $project: {
-                    username: 1,
-                    fullName: 1,
-                    avatar: 1,
-                  },
-                },
-              ],
+              pipeline: [{ $project: { username: 1, fullName: 1, avatar: 1 } }],
             },
           },
+          { $unwind: "$owner" },
+
+          // populate community
           {
-            $addFields: {
-              community: { $first: "$community" },
-              owner: { $first: "$owner" },
+            $lookup: {
+              from: "communities",
+              localField: "community",
+              foreignField: "_id",
+              as: "community",
+              pipeline: [{ $project: { name: 1, category: 1 } }],
             },
           },
+          { $unwind: { path: "$community", preserveNullAndEmptyArrays: true } },
         ],
       },
     },
-    {
-      $match: {
-        "post.0": { $exists: true }, // Ensure post exists and is active
-      },
-    },
-    {
-      $addFields: {
-        post: { $first: "$post" },
-      },
-    }
-  );
 
-  // Sort
-  const sortOrder = sortType === "asc" ? 1 : -1;
-  pipeline.push({ $sort: { [sortBy]: sortOrder } });
+    // Ensure post exists
+    { $match: { "post.0": { $exists: true } } },
+    { $addFields: { post: { $first: "$post" } } },
 
-  const bookmarkAggregate = Bookmark.aggregate(pipeline);
-  const options = {
-    page: parseInt(page, 10),
-    limit: parseInt(limit, 10),
-  };
+    // Sort by bookmark fields (createdAt etc.)
+    { $sort: { [sortBy]: sortType === "asc" ? 1 : -1 } },
 
-  const bookmarks = await Bookmark.aggregatePaginate(bookmarkAggregate, options);
+    // Pagination
+    { $skip: skip },
+    { $limit: parseInt(limit) },
+  ];
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, bookmarks, "Bookmarks fetched successfully"));
+  const docs = await Bookmark.aggregate(pipeline);
+
+  // Count for pagination
+  const totalDocs = await Bookmark.countDocuments({
+    user: userId,
+    ...(collection ? { collection } : {}),
+  });
+
+  return res.status(200).json({
+    success: true,
+    docs, // contains {_id, collection, createdAt, post: {...}}
+    totalDocs,
+    limit: parseInt(limit),
+    page: parseInt(page),
+    totalPages: Math.ceil(totalDocs / limit),
+  });
 });
 
 const getUserBookmarkCollections = asyncHandler(async (req, res) => {
@@ -196,7 +192,13 @@ const getUserBookmarkCollections = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, collections, "Bookmark collections fetched successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        collections,
+        "Bookmark collections fetched successfully"
+      )
+    );
 });
 
 const createBookmarkCollection = asyncHandler(async (req, res) => {
@@ -207,7 +209,7 @@ const createBookmarkCollection = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Collection name is required");
   }
 
-  const collectionName = name.trim().toLowerCase().replace(/\s+/g, '-');
+  const collectionName = name.trim().toLowerCase().replace(/\s+/g, "-");
 
   // Check if collection already exists for user
   const existingCollection = await Bookmark.findOne({
@@ -221,7 +223,13 @@ const createBookmarkCollection = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, { collection: collectionName }, "Collection name validated"));
+    .json(
+      new ApiResponse(
+        200,
+        { collection: collectionName },
+        "Collection name validated"
+      )
+    );
 });
 
 const deleteBookmarkCollection = asyncHandler(async (req, res) => {
@@ -239,7 +247,13 @@ const deleteBookmarkCollection = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, { deletedCount: result.deletedCount }, "Collection deleted successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { deletedCount: result.deletedCount },
+        "Collection deleted successfully"
+      )
+    );
 });
 
 const moveBookmark = asyncHandler(async (req, res) => {
@@ -266,7 +280,7 @@ const moveBookmark = asyncHandler(async (req, res) => {
 
   const updatedBookmark = await Bookmark.findByIdAndUpdate(
     bookmarkId,
-    { collection: collection.trim().toLowerCase().replace(/\s+/g, '-') },
+    { collection: collection.trim().toLowerCase().replace(/\s+/g, "-") },
     { new: true }
   );
 
@@ -288,14 +302,18 @@ const checkBookmarkStatus = asyncHandler(async (req, res) => {
     post: postId,
   }).select("collection");
 
-  const collections = bookmarks.map(bookmark => bookmark.collection);
+  const collections = bookmarks.map((bookmark) => bookmark.collection);
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, { 
-      isBookmarked: bookmarks.length > 0,
-      collections: collections,
-    }, "Bookmark status checked"));
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        isBookmarked: bookmarks.length > 0,
+        collections: collections,
+      },
+      "Bookmark status checked"
+    )
+  );
 });
 
 export {

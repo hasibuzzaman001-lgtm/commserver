@@ -25,13 +25,20 @@ const likeSchema = new Schema(
 );
 
 // Ensure a user can only like a post or comment once
-likeSchema.index({ likedBy: 1, post: 1 }, { unique: true, sparse: true });
-likeSchema.index({ likedBy: 1, comment: 1 }, { unique: true, sparse: true });
+likeSchema.index(
+  { likedBy: 1, post: 1 },
+  { unique: true, partialFilterExpression: { post: { $exists: true } } }
+);
+
+likeSchema.index(
+  { likedBy: 1, comment: 1 },
+  { unique: true, partialFilterExpression: { comment: { $exists: true } } }
+);
 
 // Ensure either post or comment is provided, but not both
-likeSchema.pre('save', function(next) {
+likeSchema.pre("save", function (next) {
   if ((this.post && this.comment) || (!this.post && !this.comment)) {
-    next(new Error('Either post or comment must be provided, but not both'));
+    next(new Error("Either post or comment must be provided, but not both"));
   } else {
     next();
   }

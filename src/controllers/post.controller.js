@@ -22,9 +22,9 @@ const getAllPosts = asyncHandler(async (req, res) => {
 
   // Build match conditions
   const matchConditions = { status: "active" };
-  
+
   // Prioritize authentic content
-  if (req.query.authentic !== 'false') {
+  if (req.query.authentic !== "false") {
     matchConditions["scrapingMetadata.isAuthentic"] = true;
   }
 
@@ -541,6 +541,97 @@ const getPostStats = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, result, "Post stats fetched successfully"));
 });
+const getPostByUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortType = "desc",
+  } = req.query;
+
+  if (!isValidObjectId(userId)) {
+    throw new ApiError(400, "Invalid user ID");
+  }
+
+  const pipeline = [
+    {
+      $match: {
+        owner: new mongoose.Types.ObjectId(userId),
+        status: "active",
+      },
+    },
+    {
+      $lookup: {
+        from: "communities",
+        localField: "community",
+        foreignField: "_id",
+        as: "communityDetails",
+        pipeline: [
+          {
+            $project: {
+              name: 1,
+              category: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerDetails",
+        pipeline: [
+          {
+            $project: {
+              username: 1,
+              fullName: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        community: { $first: "$communityDetails" },
+        owner: { $first: "$ownerDetails" },
+        totalEngagement: {
+          $add: [
+            "$localEngagement.likes",
+            "$localEngagement.comments",
+            "$localEngagement.bookmarks",
+          ],
+        },
+      },
+    },
+    {
+      $project: {
+        communityDetails: 0,
+        ownerDetails: 0,
+      },
+    },
+  ];
+
+  // Sort
+  const sortOrder = sortType === "asc" ? 1 : -1;
+  pipeline.push({ $sort: { [sortBy]: sortOrder } });
+
+  // Pagination
+  const postAggregate = Post.aggregate(pipeline);
+  const options = {
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
+  };
+
+  const posts = await Post.aggregatePaginate(postAggregate, options);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, posts, "Posts from user fetched successfully"));
+});
 
 export {
   getAllPosts,
@@ -550,4 +641,5 @@ export {
   togglePostLike,
   getPostsByPlatform,
   getPostStats,
+  getPostByUser,
 };

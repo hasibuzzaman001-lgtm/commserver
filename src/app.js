@@ -28,6 +28,7 @@ import scraperRouter from "./routes/scraper.routes.js";
 import postsRouter from "./routes/post.routes.js";
 import userRouter from "./routes/user.routes.js";
 import communityRouter from "./routes/community.routes.js";
+import { seedUsers } from "./data/seedUsers.js";
 
 app.get("/api/v1/seed", seedDatabase);
 app.use("/api/v1/users", userRouter);
