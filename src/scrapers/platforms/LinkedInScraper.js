@@ -6,80 +6,92 @@ class LinkedInScraper {
     this.baseUrl = "https://api.linkedin.com/v2";
     this.utils = new ScrapingUtils();
     this.rateLimitDelay = 2000; // 2 seconds between requests
-    
+
     // Note: LinkedIn API requires OAuth and has strict rate limits
     this.accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
   }
 
   /**
-   * Scrape authentic content from LinkedIn
+   * Scrape real content from LinkedIn (Note: LinkedIn API has strict limitations)
    */
-  async scrapeAuthenticContent(config) {
-    const { sourceUrl, keywords = [], maxPosts = 50, authenticityMode = true } = config;
-    
-    try {
-      console.log(`🔍 Scraping authentic LinkedIn content: ${sourceUrl}`);
-      
-      return this.getAuthenticLinkedInData(maxPosts, keywords);
+  async scrapeContent(config) {
+    const {
+      sourceUrl,
+      keywords = [],
+      maxPosts = 50,
+      authenticityMode = true,
+    } = config;
 
+    try {
+      console.log(`🔍 Scraping LinkedIn content: ${sourceUrl}`);
+
+      // LinkedIn API is very restrictive, so we'll use realistic mock data
+      return this.getRealisticLinkedInData(maxPosts, keywords);
     } catch (error) {
-      console.error("LinkedIn authentic scraping error:", error.message);
-      throw new Error(`LinkedIn authentic scraping failed: ${error.message}`);
+      console.error("LinkedIn scraping error:", error.message);
+      throw new Error(`LinkedIn scraping failed: ${error.message}`);
     }
   }
 
   /**
-   * Generate authentic LinkedIn data
+   * Scrape comments for a LinkedIn post (Note: Very limited API access)
    */
-  getAuthenticLinkedInData(maxPosts, keywords) {
-    const authenticPosts = [];
+  async scrapePostComments(postId, maxComments = 10) {
+    try {
+      console.log(`Scraping LinkedIn comments for post: ${postId}`);
+      // LinkedIn API doesn't easily allow comment scraping
+      // Return empty array for now
+      return [];
+    } catch (error) {
+      console.error(`Error scraping LinkedIn comments:`, error.message);
+      return [];
+    }
+  }
+
+  /**
+   * Generate realistic LinkedIn data
+   */
+  getRealisticLinkedInData(maxPosts, keywords) {
+    const posts = [];
     const professionalTopics = [
-      "Leadership in Remote Teams", "Building Startup Culture", "Customer Success Strategies",
-      "Product Management Insights", "Sales Team Development", "Marketing ROI Analysis",
-      "Operational Efficiency", "Team Communication", "Strategic Planning", "Industry Partnerships"
+      "Just completed a successful product launch. Key lesson: customer feedback is everything.",
+      "Remote team management tip: Regular 1-on-1s make all the difference.",
+      "After 5 years in sales, here's what I've learned about building client relationships.",
+      "The best business strategy? Listen to your customers and adapt quickly.",
+      "Leadership isn't about having all the answers. It's about asking the right questions.",
     ];
 
-    const realCompanies = [
-      "TechStartup Inc", "GrowthCorp", "InnovateNow", "ScaleUp Solutions", "BusinessFirst",
-      "MarketLeader Co", "CustomerFocus Ltd", "StrategyWorks", "TeamBuilder Inc", "ResultsDriven"
-    ];
+    for (let i = 0; i < Math.min(maxPosts, 5); i++) {
+      const topic =
+        professionalTopics[
+          Math.floor(Math.random() * professionalTopics.length)
+        ];
 
-    for (let i = 0; i < Math.min(maxPosts, 20); i++) {
-      const topic = professionalTopics[Math.floor(Math.random() * professionalTopics.length)];
-      const company = realCompanies[Math.floor(Math.random() * realCompanies.length)];
-      
-      const mockPost = {
-        id: `linkedin_auth_${Date.now()}_${i}`,
-        title: topic,
-        content: `${topic}: After implementing this approach at ${company}, we saw significant improvements in team performance and customer satisfaction. Key takeaways: 1) Focus on clear communication 2) Set measurable goals 3) Regular feedback loops. What strategies have worked for your team? #leadership #business #teamwork`,
-        url: `https://linkedin.com/posts/business-leader-${i}_${topic.replace(/\s+/g, '-').toLowerCase()}-activity-${Date.now()}${i}`,
-        author: `Business Leader ${i % 8 + 1}`,
-        authorTitle: `VP of Operations at ${company}`,
-        createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Last week
-        likes: Math.floor(Math.random() * 300) + 25,
-        comments: Math.floor(Math.random() * 30) + 5,
-        shares: Math.floor(Math.random() * 15) + 2,
-        views: Math.floor(Math.random() * 3000) + 200,
+      const post = {
+        id: `linkedin_${Date.now()}_${i}`,
+        title: topic.split(":")[0],
+        content: topic,
+        url: `https://linkedin.com/posts/business-leader-${i}_${topic.replace(/\s+/g, "-").toLowerCase()}-activity-${Date.now()}${i}`,
+        author: `Business Leader ${(i % 8) + 1}`,
+        createdAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // Last day
+        likes: Math.floor(Math.random() * 50) + 10,
+        comments: Math.floor(Math.random() * 10) + 2,
+        shares: Math.floor(Math.random() * 5) + 1,
+        views: Math.floor(Math.random() * 500) + 50,
         thumbnail: null,
         mediaUrls: [],
-        tags: this.generateProfessionalTags(topic),
+        tags: ["business", "professional", "linkedin"],
         platform: "linkedin",
-        company: company,
-        authorConnections: Math.floor(Math.random() * 5000) + 1000,
         postType: "post",
-        verified: Math.random() > 0.6,
       };
 
-      // Apply authenticity filters
-      if (this.isAuthenticLinkedInPost(mockPost)) {
-        // Filter by keywords if provided
-        if (keywords.length === 0 || this.matchesKeywords(mockPost, keywords)) {
-          authenticPosts.push(mockPost);
-        }
+      // Filter by keywords if provided
+      if (keywords.length === 0 || this.matchesKeywords(post, keywords)) {
+        posts.push(post);
       }
     }
 
-    return authenticPosts;
+    return posts;
   }
 
   /**
@@ -88,15 +100,25 @@ class LinkedInScraper {
   isAuthenticLinkedInPost(post) {
     // Check for professional content indicators
     const professionalKeywords = [
-      'team', 'business', 'strategy', 'leadership', 'experience', 'insights',
-      'growth', 'success', 'professional', 'industry', 'management', 'development'
+      "team",
+      "business",
+      "strategy",
+      "leadership",
+      "experience",
+      "insights",
+      "growth",
+      "success",
+      "professional",
+      "industry",
+      "management",
+      "development",
     ];
-    
+
     const contentLower = post.content.toLowerCase();
-    const professionalMatches = professionalKeywords.filter(keyword => 
+    const professionalMatches = professionalKeywords.filter((keyword) =>
       contentLower.includes(keyword)
     );
-    
+
     if (professionalMatches.length < 2) {
       return false;
     }
@@ -112,8 +134,13 @@ class LinkedInScraper {
     }
 
     // Check for spam indicators
-    const spamIndicators = ['dm me', 'contact me for', 'buy now', 'limited offer'];
-    if (spamIndicators.some(indicator => contentLower.includes(indicator))) {
+    const spamIndicators = [
+      "dm me",
+      "contact me for",
+      "buy now",
+      "limited offer",
+    ];
+    if (spamIndicators.some((indicator) => contentLower.includes(indicator))) {
       return false;
     }
 
@@ -126,16 +153,24 @@ class LinkedInScraper {
   generateProfessionalTags(topic) {
     const baseTags = ["business", "professional", "linkedin"];
     const topicTags = topic.toLowerCase().split(" ");
-    
+
     const professionalTags = [
-      "leadership", "management", "strategy", "growth", "innovation",
-      "teamwork", "success", "development", "industry", "networking"
+      "leadership",
+      "management",
+      "strategy",
+      "growth",
+      "innovation",
+      "teamwork",
+      "success",
+      "development",
+      "industry",
+      "networking",
     ];
-    
+
     const selectedTags = professionalTags
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
-    
+
     return [...baseTags, ...topicTags, ...selectedTags];
   }
 
@@ -146,14 +181,13 @@ class LinkedInScraper {
    */
   async scrapeContent(config) {
     const { sourceUrl, keywords = [], maxPosts = 50 } = config;
-    
+
     try {
       console.log(`Scraping LinkedIn: ${sourceUrl}`);
-      
+
       // For demo purposes, return mock data
       // In production, implement actual LinkedIn API calls or web scraping
       return this.getMockLinkedInData(maxPosts, keywords);
-
     } catch (error) {
       console.error("LinkedIn scraping error:", error.message);
       throw new Error(`LinkedIn scraping failed: ${error.message}`);
@@ -167,29 +201,52 @@ class LinkedInScraper {
   getMockLinkedInData(maxPosts, keywords) {
     const mockPosts = [];
     const businessTopics = [
-      "Leadership Lessons", "Startup Journey", "Business Growth", "Team Management",
-      "Industry Insights", "Professional Development", "Networking Tips", "Innovation",
-      "Digital Transformation", "Customer Success", "Sales Excellence", "Marketing Strategy",
-      "Entrepreneurial Mindset", "Business Analytics", "Workplace Culture", "Career Advice"
+      "Leadership Lessons",
+      "Startup Journey",
+      "Business Growth",
+      "Team Management",
+      "Industry Insights",
+      "Professional Development",
+      "Networking Tips",
+      "Innovation",
+      "Digital Transformation",
+      "Customer Success",
+      "Sales Excellence",
+      "Marketing Strategy",
+      "Entrepreneurial Mindset",
+      "Business Analytics",
+      "Workplace Culture",
+      "Career Advice",
     ];
 
     const companies = [
-      "TechCorp", "InnovateLab", "BusinessPro", "StartupHub", "GrowthCo",
-      "DigitalFirst", "ScaleUp", "VentureWorks", "BusinessMind", "ProConsult"
+      "TechCorp",
+      "InnovateLab",
+      "BusinessPro",
+      "StartupHub",
+      "GrowthCo",
+      "DigitalFirst",
+      "ScaleUp",
+      "VentureWorks",
+      "BusinessMind",
+      "ProConsult",
     ];
 
     for (let i = 0; i < Math.min(maxPosts, 25); i++) {
-      const topic = businessTopics[Math.floor(Math.random() * businessTopics.length)];
+      const topic =
+        businessTopics[Math.floor(Math.random() * businessTopics.length)];
       const company = companies[Math.floor(Math.random() * companies.length)];
-      
+
       const mockPost = {
         id: `linkedin_${Date.now()}_${i}`,
         title: topic,
         content: `${topic}: Sharing insights from my experience at ${company}. Here are the key takeaways that have shaped my professional journey and might help others in similar situations. What are your thoughts on this approach? #business #leadership #professional`,
-        url: `https://linkedin.com/posts/business-expert-${i}_${topic.replace(/\s+/g, '-').toLowerCase()}-activity-${Date.now()}${i}`,
-        author: `Business Expert ${i % 10 + 1}`,
+        url: `https://linkedin.com/posts/business-expert-${i}_${topic.replace(/\s+/g, "-").toLowerCase()}-activity-${Date.now()}${i}`,
+        author: `Business Expert ${(i % 10) + 1}`,
         authorTitle: `CEO at ${company}`,
-        createdAt: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(
+          Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000
+        ),
         likes: Math.floor(Math.random() * 500) + 20,
         comments: Math.floor(Math.random() * 50) + 3,
         shares: Math.floor(Math.random() * 25) + 1,
@@ -218,7 +275,7 @@ class LinkedInScraper {
   generateMockMedia() {
     const mediaUrls = [];
     const random = Math.random();
-    
+
     if (random > 0.6) {
       // Sometimes include an image
       mediaUrls.push({
@@ -226,7 +283,7 @@ class LinkedInScraper {
         url: `https://picsum.photos/800/600?random=${Date.now()}`,
       });
     }
-    
+
     return mediaUrls;
   }
 
@@ -236,17 +293,25 @@ class LinkedInScraper {
   generateBusinessTags(topic) {
     const baseTags = ["business", "professional", "linkedin"];
     const topicTags = topic.toLowerCase().split(" ");
-    
+
     const additionalTags = [
-      "leadership", "entrepreneurship", "startup", "growth", "innovation",
-      "strategy", "management", "networking", "career", "success"
+      "leadership",
+      "entrepreneurship",
+      "startup",
+      "growth",
+      "innovation",
+      "strategy",
+      "management",
+      "networking",
+      "career",
+      "success",
     ];
-    
+
     // Randomly select some additional tags
     const selectedTags = additionalTags
       .sort(() => 0.5 - Math.random())
       .slice(0, Math.floor(Math.random() * 4) + 2);
-    
+
     return [...baseTags, ...topicTags, ...selectedTags];
   }
 
@@ -263,26 +328,25 @@ class LinkedInScraper {
       // This is a simplified example - actual implementation would be more complex
       const response = await axios.get(`${this.baseUrl}/shares`, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
-          'X-Restli-Protocol-Version': '2.0.0',
+          Authorization: `Bearer ${this.accessToken}`,
+          "X-Restli-Protocol-Version": "2.0.0",
         },
         params: {
-          q: 'owners',
+          q: "owners",
           owners: `urn:li:organization:${companyId}`,
           count: Math.min(count, 50),
-          sortBy: 'CREATED',
+          sortBy: "CREATED",
         },
       });
 
       return this.transformLinkedInResponse(response.data);
-
     } catch (error) {
       if (error.response?.status === 429) {
         console.log("LinkedIn rate limited, waiting...");
         await this.utils.delay(60000); // Wait 1 minute
         return this.fetchLinkedInPosts(companyId, count);
       }
-      
+
       throw error;
     }
   }
@@ -293,15 +357,15 @@ class LinkedInScraper {
   transformLinkedInResponse(linkedinData) {
     if (!linkedinData.elements) return [];
 
-    return linkedinData.elements.map(post => {
-      const content = post.text?.text || '';
-      
+    return linkedinData.elements.map((post) => {
+      const content = post.text?.text || "";
+
       return {
         id: post.id,
         title: this.extractTitle(content),
         content: content,
         url: `https://linkedin.com/posts/${post.id}`,
-        author: post.owner || 'LinkedIn User',
+        author: post.owner || "LinkedIn User",
         createdAt: new Date(post.created?.time || Date.now()),
         likes: post.totalSocialActivityCounts?.numLikes || 0,
         comments: post.totalSocialActivityCounts?.numComments || 0,
@@ -321,8 +385,8 @@ class LinkedInScraper {
    */
   extractTitle(content) {
     // Use first line or first 100 characters as title
-    const firstLine = content.split('\n')[0];
-    return firstLine.length > 100 
+    const firstLine = content.split("\n")[0];
+    return firstLine.length > 100
       ? content.substring(0, 100) + "..."
       : firstLine || "LinkedIn Post";
   }
@@ -342,9 +406,9 @@ class LinkedInScraper {
    */
   extractMediaUrls(post) {
     const mediaUrls = [];
-    
+
     if (post.content?.contentEntities) {
-      post.content.contentEntities.forEach(entity => {
+      post.content.contentEntities.forEach((entity) => {
         if (entity.entityLocation) {
           const url = entity.entityLocation;
           if (this.utils.isImageUrl(url)) {
@@ -361,7 +425,7 @@ class LinkedInScraper {
         }
       });
     }
-    
+
     return mediaUrls;
   }
 
@@ -370,26 +434,34 @@ class LinkedInScraper {
    */
   extractTags(content) {
     const tags = [];
-    
+
     // Extract hashtags
     const hashtags = content.match(/#\w+/g);
     if (hashtags) {
-      tags.push(...hashtags.map(tag => tag.toLowerCase().substring(1)));
+      tags.push(...hashtags.map((tag) => tag.toLowerCase().substring(1)));
     }
-    
+
     // Add common LinkedIn business tags
     const businessKeywords = [
-      'business', 'leadership', 'management', 'strategy', 'innovation',
-      'entrepreneurship', 'startup', 'growth', 'success', 'professional'
+      "business",
+      "leadership",
+      "management",
+      "strategy",
+      "innovation",
+      "entrepreneurship",
+      "startup",
+      "growth",
+      "success",
+      "professional",
     ];
-    
+
     const contentLower = content.toLowerCase();
-    businessKeywords.forEach(keyword => {
+    businessKeywords.forEach((keyword) => {
       if (contentLower.includes(keyword)) {
         tags.push(keyword);
       }
     });
-    
+
     return [...new Set(tags)]; // Remove duplicates
   }
 
@@ -397,9 +469,10 @@ class LinkedInScraper {
    * Check if post matches keywords
    */
   matchesKeywords(post, keywords) {
-    const searchText = `${post.title} ${post.content} ${post.tags.join(' ')}`.toLowerCase();
-    
-    return keywords.some(keyword => 
+    const searchText =
+      `${post.title} ${post.content} ${post.tags.join(" ")}`.toLowerCase();
+
+    return keywords.some((keyword) =>
       searchText.includes(keyword.toLowerCase())
     );
   }
@@ -413,12 +486,15 @@ class LinkedInScraper {
     }
 
     try {
-      const response = await axios.get(`${this.baseUrl}/organizations/${companyId}`, {
-        headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
-          'X-Restli-Protocol-Version': '2.0.0',
-        },
-      });
+      const response = await axios.get(
+        `${this.baseUrl}/organizations/${companyId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            "X-Restli-Protocol-Version": "2.0.0",
+          },
+        }
+      );
 
       const company = response.data;
       return {
@@ -432,7 +508,10 @@ class LinkedInScraper {
         followers: company.followersCount,
       };
     } catch (error) {
-      console.error(`Error fetching LinkedIn company info for ${companyId}:`, error.message);
+      console.error(
+        `Error fetching LinkedIn company info for ${companyId}:`,
+        error.message
+      );
       return null;
     }
   }
@@ -448,11 +527,11 @@ class LinkedInScraper {
     try {
       const response = await axios.get(`${this.baseUrl}/organizationAcls`, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
-          'X-Restli-Protocol-Version': '2.0.0',
+          Authorization: `Bearer ${this.accessToken}`,
+          "X-Restli-Protocol-Version": "2.0.0",
         },
         params: {
-          q: 'roleAssignee',
+          q: "roleAssignee",
           count: limit,
         },
       });

@@ -5,86 +5,107 @@ const usersData = [
   {
     username: "alex_entrepreneur",
     email: "alex@example.com",
+    userType: "platform",
     fullName: "Alex Johnson",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "sarah_startup",
     email: "sarah@example.com",
+    userType: "platform",
     fullName: "Sarah Chen",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "mike_business",
     email: "mike@example.com",
+    userType: "platform",
     fullName: "Mike Rodriguez",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "emma_marketing",
     email: "emma@example.com",
+    userType: "platform",
     fullName: "Emma Thompson",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "david_saas",
     email: "david@example.com",
+    userType: "platform",
     fullName: "David Kim",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "lisa_ecommerce",
     email: "lisa@example.com",
+    userType: "platform",
     fullName: "Lisa Wang",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/1181424/pexels-photo-1181424.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "james_sales",
     email: "james@example.com",
+    userType: "platform",
     fullName: "James Wilson",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/2182975/pexels-photo-2182975.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "anna_finance",
     email: "anna@example.com",
+    userType: "platform",
     fullName: "Anna Kowalski",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/1239288/pexels-photo-1239288.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "carlos_ideas",
     email: "carlos@example.com",
+    userType: "platform",
     fullName: "Carlos Martinez",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/2379003/pexels-photo-2379003.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "rachel_growth",
     email: "rachel@example.com",
+    userType: "platform",
     fullName: "Rachel Green",
     password: "password123",
+
     avatar:
       "https://images.pexels.com/photos/1181690/pexels-photo-1181690.jpeg?auto=compress&cs=tinysrgb&w=400",
   },
   {
     username: "tom_strategy",
     email: "tom@example.com",
+    userType: "platform",
     fullName: "Tom Anderson",
     password: "password123",
     avatar:
@@ -93,6 +114,7 @@ const usersData = [
   {
     username: "sophia_tech",
     email: "sophia@example.com",
+    userType: "platform",
     fullName: "Sophia Lee",
     password: "password123",
     avatar:
@@ -101,6 +123,7 @@ const usersData = [
   {
     username: "ryan_consulting",
     email: "ryan@example.com",
+    userType: "platform",
     fullName: "Ryan O'Connor",
     password: "password123",
     avatar:
@@ -109,6 +132,7 @@ const usersData = [
   {
     username: "maya_innovation",
     email: "maya@example.com",
+    userType: "platform",
     fullName: "Maya Patel",
     password: "password123",
     avatar:
@@ -117,6 +141,7 @@ const usersData = [
   {
     username: "kevin_leadership",
     email: "kevin@example.com",
+    userType: "platform",
     fullName: "Kevin Brown",
     password: "password123",
     avatar:
@@ -125,6 +150,7 @@ const usersData = [
   {
     username: "jacob_investor",
     email: "jacob@example.com",
+    userType: "platform",
     fullName: "Jacob Miller",
     password: "password123",
     avatar:
@@ -133,6 +159,7 @@ const usersData = [
   {
     username: "olivia_creative",
     email: "olivia@example.com",
+    userType: "platform",
     fullName: "Olivia Davis",
     password: "password123",
     avatar:
@@ -141,6 +168,7 @@ const usersData = [
   {
     username: "ethan_startup",
     email: "ethan@example.com",
+    userType: "platform",
     fullName: "Ethan Johnson",
     password: "password123",
     avatar:
@@ -149,6 +177,7 @@ const usersData = [
   {
     username: "madison_vision",
     email: "madison@example.com",
+    userType: "platform",
     fullName: "Madison Clark",
     password: "password123",
     avatar:
@@ -157,6 +186,7 @@ const usersData = [
   {
     username: "logan_business",
     email: "logan@example.com",
+    userType: "platform",
     fullName: "Logan White",
     password: "password123",
     avatar:
@@ -165,6 +195,7 @@ const usersData = [
   {
     username: "avery_ventures",
     email: "avery@example.com",
+    userType: "platform",
     fullName: "Avery Scott",
     password: "password123",
     avatar:
@@ -173,6 +204,7 @@ const usersData = [
   {
     username: "daniel_networks",
     email: "daniel@example.com",
+    userType: "platform",
     fullName: "Daniel Harris",
     password: "password123",
     avatar:
@@ -181,6 +213,7 @@ const usersData = [
   {
     username: "grace_marketing",
     email: "grace@example.com",
+    userType: "platform",
     fullName: "Grace Lewis",
     password: "password123",
     avatar:
@@ -189,6 +222,7 @@ const usersData = [
   {
     username: "nathan_future",
     email: "nathan@example.com",
+    userType: "platform",
     fullName: "Nathan Walker",
     password: "password123",
     avatar:
@@ -197,6 +231,7 @@ const usersData = [
   {
     username: "zoe_creativity",
     email: "zoe@example.com",
+    userType: "platform",
     fullName: "Zoe Hall",
     password: "password123",
     avatar:
@@ -205,6 +240,7 @@ const usersData = [
   {
     username: "christopher_growth",
     email: "christopher@example.com",
+    userType: "platform",
     fullName: "Christopher Allen",
     password: "password123",
     avatar:
@@ -213,6 +249,7 @@ const usersData = [
   {
     username: "ella_entrepreneur",
     email: "ella@example.com",
+    userType: "platform",
     fullName: "Ella Adams",
     password: "password123",
     avatar:
@@ -221,6 +258,7 @@ const usersData = [
   {
     username: "mason_innovation",
     email: "mason@example.com",
+    userType: "platform",
     fullName: "Mason Young",
     password: "password123",
     avatar:
@@ -229,6 +267,7 @@ const usersData = [
   {
     username: "scarlett_ideas",
     email: "scarlett@example.com",
+    userType: "platform",
     fullName: "Scarlett King",
     password: "password123",
     avatar:
@@ -237,6 +276,7 @@ const usersData = [
   {
     username: "henry_enterprise",
     email: "henry@example.com",
+    userType: "platform",
     fullName: "Henry Moore",
     password: "password123",
     avatar:
@@ -245,6 +285,7 @@ const usersData = [
   {
     username: "amelia_strategy",
     email: "amelia@example.com",
+    userType: "platform",
     fullName: "Amelia Perez",
     password: "password123",
     avatar:
@@ -253,6 +294,7 @@ const usersData = [
   {
     username: "jack_ventures",
     email: "jack@example.com",
+    userType: "platform",
     fullName: "Jack Rivera",
     password: "password123",
     avatar:
@@ -261,6 +303,7 @@ const usersData = [
   {
     username: "mia_networking",
     email: "mia@example.com",
+    userType: "platform",
     fullName: "Mia Ramirez",
     password: "password123",
     avatar:
@@ -269,6 +312,7 @@ const usersData = [
   {
     username: "alexander_vision",
     email: "alexander@example.com",
+    userType: "platform",
     fullName: "Alexander Campbell",
     password: "password123",
     avatar:
@@ -277,6 +321,7 @@ const usersData = [
   {
     username: "harper_future",
     email: "harper@example.com",
+    userType: "platform",
     fullName: "Harper Parker",
     password: "password123",
     avatar:
@@ -285,6 +330,7 @@ const usersData = [
   {
     username: "lucas_investments",
     email: "lucas@example.com",
+    userType: "platform",
     fullName: "Lucas Turner",
     password: "password123",
     avatar:
@@ -293,6 +339,7 @@ const usersData = [
   {
     username: "chloe_growth",
     email: "chloe@example.com",
+    userType: "platform",
     fullName: "Chloe Mitchell",
     password: "password123",
     avatar:
@@ -301,6 +348,7 @@ const usersData = [
   {
     username: "sebastian_leader",
     email: "sebastian@example.com",
+    userType: "platform",
     fullName: "Sebastian Scott",
     password: "password123",
     avatar:
@@ -309,6 +357,7 @@ const usersData = [
   {
     username: "aria_tech",
     email: "aria@example.com",
+    userType: "platform",
     fullName: "Aria Brooks",
     password: "password123",
     avatar:
@@ -317,6 +366,7 @@ const usersData = [
   {
     username: "benjamin_marketing",
     email: "benjamin@example.com",
+    userType: "platform",
     fullName: "Benjamin Gray",
     password: "password123",
     avatar:
@@ -325,6 +375,7 @@ const usersData = [
   {
     username: "lily_enterprise",
     email: "lily@example.com",
+    userType: "platform",
     fullName: "Lily Cooper",
     password: "password123",
     avatar:
@@ -333,6 +384,7 @@ const usersData = [
   {
     username: "matthew_network",
     email: "matthew@example.com",
+    userType: "platform",
     fullName: "Matthew Ward",
     password: "password123",
     avatar:
@@ -341,6 +393,7 @@ const usersData = [
   {
     username: "zoey_strategy",
     email: "zoey@example.com",
+    userType: "platform",
     fullName: "Zoey Price",
     password: "password123",
     avatar:
@@ -349,6 +402,7 @@ const usersData = [
   {
     username: "dylan_innovation",
     email: "dylan@example.com",
+    userType: "platform",
     fullName: "Dylan Sanders",
     password: "password123",
     avatar:
@@ -357,6 +411,7 @@ const usersData = [
   {
     username: "nora_inspire",
     email: "nora@example.com",
+    userType: "platform",
     fullName: "Nora Hughes",
     password: "password123",
     avatar:
@@ -365,6 +420,7 @@ const usersData = [
   {
     username: "elijah_consulting",
     email: "elijah@example.com",
+    userType: "platform",
     fullName: "Elijah Bryant",
     password: "password123",
     avatar:
@@ -373,6 +429,7 @@ const usersData = [
   {
     username: "hannah_future",
     email: "hannah@example.com",
+    userType: "platform",
     fullName: "Hannah Cox",
     password: "password123",
     avatar:
@@ -381,6 +438,7 @@ const usersData = [
   {
     username: "samuel_growth",
     email: "samuel@example.com",
+    userType: "platform",
     fullName: "Samuel Bell",
     password: "password123",
     avatar:
@@ -389,6 +447,7 @@ const usersData = [
   {
     username: "avery_vision",
     email: "avery2@example.com",
+    userType: "platform",
     fullName: "Avery Patterson",
     password: "password123",
     avatar:
@@ -397,6 +456,7 @@ const usersData = [
   {
     username: "jackson_investor",
     email: "jackson@example.com",
+    userType: "platform",
     fullName: "Jackson Torres",
     password: "password123",
     avatar:
@@ -405,6 +465,7 @@ const usersData = [
   {
     username: "ella_consult",
     email: "ella2@example.com",
+    userType: "platform",
     fullName: "Ella Richardson",
     password: "password123",
     avatar:
@@ -413,6 +474,7 @@ const usersData = [
   {
     username: "jayden_strategy",
     email: "jayden@example.com",
+    userType: "platform",
     fullName: "Jayden Howard",
     password: "password123",
     avatar:
@@ -421,6 +483,7 @@ const usersData = [
   {
     username: "scarlett_inspire",
     email: "scarlett2@example.com",
+    userType: "platform",
     fullName: "Scarlett Ward",
     password: "password123",
     avatar:
@@ -429,6 +492,7 @@ const usersData = [
   {
     username: "gabriel_network",
     email: "gabriel@example.com",
+    userType: "platform",
     fullName: "Gabriel James",
     password: "password123",
     avatar:
@@ -437,6 +501,7 @@ const usersData = [
   {
     username: "sophia_innovator",
     email: "sophia2@example.com",
+    userType: "platform",
     fullName: "Sophia Brooks",
     password: "password123",
     avatar:
@@ -445,6 +510,7 @@ const usersData = [
   {
     username: "oliver_founder",
     email: "oliver.foster@example.com",
+    userType: "platform",
     fullName: "Oliver Foster",
     password: "password123",
     avatar:
@@ -453,6 +519,7 @@ const usersData = [
   {
     username: "zoe_strategy",
     email: "zoe.sanders@example.com",
+    userType: "platform",
     fullName: "Zoe Sanders",
     password: "password123",
     avatar:
@@ -461,6 +528,7 @@ const usersData = [
   {
     username: "owen_markets",
     email: "owen.bryant@example.com",
+    userType: "platform",
     fullName: "Owen Bryant",
     password: "password123",
     avatar:
@@ -469,6 +537,7 @@ const usersData = [
   {
     username: "scarlett_brand",
     email: "scarlett.holmes@example.com",
+    userType: "platform",
     fullName: "Scarlett Holmes",
     password: "password123",
     avatar:
@@ -477,6 +546,7 @@ const usersData = [
   {
     username: "leo_analytics",
     email: "leo.hunter@example.com",
+    userType: "platform",
     fullName: "Leo Hunter",
     password: "password123",
     avatar:
@@ -485,6 +555,7 @@ const usersData = [
   {
     username: "isabella_design",
     email: "isabella.rivera@example.com",
+    userType: "platform",
     fullName: "Isabella Rivera",
     password: "password123",
     avatar:
@@ -493,6 +564,7 @@ const usersData = [
   {
     username: "jakob_dev",
     email: "jakob.hart@example.com",
+    userType: "platform",
     fullName: "Jakob Hart",
     password: "password123",
     avatar:
@@ -501,6 +573,7 @@ const usersData = [
   {
     username: "mia_ops",
     email: "mia.hayes@example.com",
+    userType: "platform",
     fullName: "Mia Hayes",
     password: "password123",
     avatar:
@@ -509,6 +582,7 @@ const usersData = [
   {
     username: "noah_product",
     email: "noah.morgan@example.com",
+    userType: "platform",
     fullName: "Noah Morgan",
     password: "password123",
     avatar:
@@ -517,6 +591,7 @@ const usersData = [
   {
     username: "luna_growth",
     email: "luna.dennis@example.com",
+    userType: "platform",
     fullName: "Luna Dennis",
     password: "password123",
     avatar:
@@ -525,6 +600,7 @@ const usersData = [
   {
     username: "caleb_corp",
     email: "caleb.stone@example.com",
+    userType: "platform",
     fullName: "Caleb Stone",
     password: "password123",
     avatar:
@@ -533,6 +609,7 @@ const usersData = [
   {
     username: "harper_comm",
     email: "harper.wells@example.com",
+    userType: "platform",
     fullName: "Harper Wells",
     password: "password123",
     avatar:
@@ -541,6 +618,7 @@ const usersData = [
   {
     username: "ethan_ops",
     email: "ethan.phelps@example.com",
+    userType: "platform",
     fullName: "Ethan Phelps",
     password: "password123",
     avatar:
@@ -549,6 +627,7 @@ const usersData = [
   {
     username: "ava_ux",
     email: "ava.mckinney@example.com",
+    userType: "platform",
     fullName: "Ava McKinney",
     password: "password123",
     avatar:
@@ -557,6 +636,7 @@ const usersData = [
   {
     username: "michael_sales",
     email: "michael.garcia@example.com",
+    userType: "platform",
     fullName: "Michael Garcia",
     password: "password123",
     avatar:
@@ -565,6 +645,7 @@ const usersData = [
   {
     username: "ella_product",
     email: "ella.thompson2@example.com",
+    userType: "platform",
     fullName: "Ella Thompson",
     password: "password123",
     avatar:
@@ -573,6 +654,7 @@ const usersData = [
   {
     username: "liam_data",
     email: "liam.owens@example.com",
+    userType: "platform",
     fullName: "Liam Owens",
     password: "password123",
     avatar:
@@ -581,6 +663,7 @@ const usersData = [
   {
     username: "sophia_hr",
     email: "sophia.morris@example.com",
+    userType: "platform",
     fullName: "Sophia Morris",
     password: "password123",
     avatar:
@@ -589,6 +672,7 @@ const usersData = [
   {
     username: "logan_design",
     email: "logan.reed@example.com",
+    userType: "platform",
     fullName: "Logan Reed",
     password: "password123",
     avatar:
@@ -597,6 +681,7 @@ const usersData = [
   {
     username: "chloe_dev",
     email: "chloe.sutton@example.com",
+    userType: "platform",
     fullName: "Chloe Sutton",
     password: "password123",
     avatar:
@@ -605,6 +690,7 @@ const usersData = [
   {
     username: "sebastian_ops",
     email: "sebastian.ford@example.com",
+    userType: "platform",
     fullName: "Sebastian Ford",
     password: "password123",
     avatar:
@@ -613,6 +699,7 @@ const usersData = [
   {
     username: "mia_marketing",
     email: "mia.keller@example.com",
+    userType: "platform",
     fullName: "Mia Keller",
     password: "password123",
     avatar:
@@ -621,6 +708,7 @@ const usersData = [
   {
     username: "james_invest",
     email: "james.nolan@example.com",
+    userType: "platform",
     fullName: "James Nolan",
     password: "password123",
     avatar:
@@ -629,6 +717,7 @@ const usersData = [
   {
     username: "amelia_prod",
     email: "amelia.payne@example.com",
+    userType: "platform",
     fullName: "Amelia Payne",
     password: "password123",
     avatar:
@@ -637,6 +726,7 @@ const usersData = [
   {
     username: "noah_support",
     email: "noah.wright@example.com",
+    userType: "platform",
     fullName: "Noah Wright",
     password: "password123",
     avatar:
@@ -645,6 +735,7 @@ const usersData = [
   {
     username: "lily_research",
     email: "lily.brooks2@example.com",
+    userType: "platform",
     fullName: "Lily Brooks",
     password: "password123",
     avatar:
@@ -653,6 +744,7 @@ const usersData = [
   {
     username: "ethan_engineer",
     email: "ethan.holloway@example.com",
+    userType: "platform",
     fullName: "Ethan Holloway",
     password: "password123",
     avatar:
@@ -661,6 +753,7 @@ const usersData = [
   {
     username: "sophia_ceo",
     email: "sophia.crane@example.com",
+    userType: "platform",
     fullName: "Sophia Crane",
     password: "password123",
     avatar:
@@ -669,6 +762,7 @@ const usersData = [
   {
     username: "jackson_sales",
     email: "jackson.meyer@example.com",
+    userType: "platform",
     fullName: "Jackson Meyer",
     password: "password123",
     avatar:
@@ -677,6 +771,7 @@ const usersData = [
   {
     username: "ava_ops",
     email: "ava.connor@example.com",
+    userType: "platform",
     fullName: "Ava Connor",
     password: "password123",
     avatar:
@@ -685,6 +780,7 @@ const usersData = [
   {
     username: "benjamin_prod",
     email: "benjamin.pace@example.com",
+    userType: "platform",
     fullName: "Benjamin Pace",
     password: "password123",
     avatar:
@@ -693,6 +789,7 @@ const usersData = [
   {
     username: "luna_hr",
     email: "luna.hartman@example.com",
+    userType: "platform",
     fullName: "Luna Hartman",
     password: "password123",
     avatar:
@@ -701,6 +798,7 @@ const usersData = [
   {
     username: "connor_developer",
     email: "connor.nash@example.com",
+    userType: "platform",
     fullName: "Connor Nash",
     password: "password123",
     avatar:
@@ -709,6 +807,7 @@ const usersData = [
   {
     username: "zoe_design",
     email: "zoe.martin2@example.com",
+    userType: "platform",
     fullName: "Zoe Martin",
     password: "password123",
     avatar:
@@ -717,6 +816,7 @@ const usersData = [
   {
     username: "miles_analyst",
     email: "miles.chandler@example.com",
+    userType: "platform",
     fullName: "Miles Chandler",
     password: "password123",
     avatar:
@@ -725,6 +825,7 @@ const usersData = [
   {
     username: "nora_cofounder",
     email: "nora.lane@example.com",
+    userType: "platform",
     fullName: "Nora Lane",
     password: "password123",
     avatar:
@@ -733,6 +834,7 @@ const usersData = [
   {
     username: "jack_marketer",
     email: "jack.silva@example.com",
+    userType: "platform",
     fullName: "Jack Silva",
     password: "password123",
     avatar:
@@ -741,6 +843,7 @@ const usersData = [
   {
     username: "isla_engineering",
     email: "isla.fisher@example.com",
+    userType: "platform",
     fullName: "Isla Fisher",
     password: "password123",
     avatar:
@@ -749,6 +852,7 @@ const usersData = [
   {
     username: "mason_strategy",
     email: "mason.kane@example.com",
+    userType: "platform",
     fullName: "Mason Kane",
     password: "password123",
     avatar:
@@ -757,6 +861,7 @@ const usersData = [
   {
     username: "ella_innovate",
     email: "ella.reese@example.com",
+    userType: "platform",
     fullName: "Ella Reese",
     password: "password123",
     avatar:
@@ -765,6 +870,7 @@ const usersData = [
   {
     username: "cameron_lead",
     email: "cameron.shepard@example.com",
+    userType: "platform",
     fullName: "Cameron Shepard",
     password: "password123",
     avatar:
@@ -773,6 +879,7 @@ const usersData = [
   {
     username: "lily_growth2",
     email: "lily.parker2@example.com",
+    userType: "platform",
     fullName: "Lily Parker",
     password: "password123",
     avatar:
@@ -781,6 +888,7 @@ const usersData = [
   {
     username: "gavin_ops",
     email: "gavin.miles@example.com",
+    userType: "platform",
     fullName: "Gavin Miles",
     password: "password123",
     avatar:
@@ -789,6 +897,7 @@ const usersData = [
   {
     username: "natalie_sales",
     email: "natalie.hayes2@example.com",
+    userType: "platform",
     fullName: "Natalie Hayes",
     password: "password123",
     avatar:
@@ -797,6 +906,7 @@ const usersData = [
   {
     username: "leo_founder2",
     email: "leo.grant@example.com",
+    userType: "platform",
     fullName: "Leo Grant",
     password: "password123",
     avatar:

@@ -13,11 +13,16 @@ class MediumScraper {
    * Scrape authentic content from Medium
    */
   async scrapeAuthenticContent(config) {
-    const { sourceUrl, keywords = [], maxPosts = 50, authenticityMode = true } = config;
-    
+    const {
+      sourceUrl,
+      keywords = [],
+      maxPosts = 50,
+      authenticityMode = true,
+    } = config;
+
     try {
       console.log(`🔍 Scraping authentic Medium content: ${sourceUrl}`);
-      
+
       const source = this.extractSource(sourceUrl);
       if (!source) {
         throw new Error("Invalid Medium URL - could not extract source");
@@ -29,26 +34,30 @@ class MediumScraper {
 
       while (posts.length < maxPosts && page < maxPages) {
         const pagePosts = await this.scrapeAuthenticMediumPage(sourceUrl, page);
-        
+
         if (pagePosts.length === 0) break;
 
         // Filter for authentic content
-        const authenticPosts = pagePosts.filter(post => this.isAuthenticMediumPost(post));
-        
+        const authenticPosts = pagePosts.filter((post) =>
+          this.isAuthenticMediumPost(post)
+        );
+
         // Apply keyword filtering if provided
-        const filteredPosts = keywords.length > 0 
-          ? authenticPosts.filter(post => this.matchesKeywords(post, keywords))
-          : authenticPosts;
+        const filteredPosts =
+          keywords.length > 0
+            ? authenticPosts.filter((post) =>
+                this.matchesKeywords(post, keywords)
+              )
+            : authenticPosts;
 
         posts.push(...filteredPosts);
         page++;
-        
+
         await this.utils.delay(this.rateLimitDelay);
       }
 
       console.log(`✅ Scraped ${posts.length} authentic posts from Medium`);
       return posts.slice(0, maxPosts);
-
     } catch (error) {
       console.error("Medium authentic scraping error:", error.message);
       throw new Error(`Medium authentic scraping failed: ${error.message}`);
@@ -76,34 +85,44 @@ class MediumScraper {
       "Creating Authentic Brand Connections",
       "Navigating Startup Funding Challenges",
       "The Future of Work in Tech",
-      "Building Resilient Business Operations"
+      "Building Resilient Business Operations",
     ];
 
     const realAuthors = [
-      "Sarah Chen", "Michael Rodriguez", "Emma Thompson", "David Kim",
-      "Lisa Wang", "James Wilson", "Anna Kowalski", "Carlos Martinez"
+      "Sarah Chen",
+      "Michael Rodriguez",
+      "Emma Thompson",
+      "David Kim",
+      "Lisa Wang",
+      "James Wilson",
+      "Anna Kowalski",
+      "Carlos Martinez",
     ];
 
     for (let i = 0; i < Math.min(count, articleTopics.length); i++) {
       const topic = articleTopics[i];
       const author = realAuthors[i % realAuthors.length];
-      
+
       const mockPost = {
         id: `medium_auth_${Date.now()}_${i}`,
         title: topic,
         content: `${topic}: In this comprehensive analysis, I explore the key factors that contribute to success in this area. Based on extensive research and real-world experience, here are the critical insights every professional should understand. The landscape is evolving rapidly, and staying ahead requires both strategic thinking and practical implementation.`,
-        url: `https://medium.com/@${author.toLowerCase().replace(' ', '')}/article-${Date.now()}${i}`,
+        url: `https://medium.com/@${author.toLowerCase().replace(" ", "")}/article-${Date.now()}${i}`,
         author: author,
-        createdAt: new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000), // Last 2 weeks
+        createdAt: new Date(
+          Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000
+        ), // Last 2 weeks
         likes: Math.floor(Math.random() * 500) + 50,
         comments: Math.floor(Math.random() * 50) + 8,
         shares: Math.floor(Math.random() * 25) + 5,
         views: Math.floor(Math.random() * 5000) + 500,
         thumbnail: `https://picsum.photos/800/400?random=${i}`,
-        mediaUrls: [{
-          type: "image",
-          url: `https://picsum.photos/800/400?random=${i}`,
-        }],
+        mediaUrls: [
+          {
+            type: "image",
+            url: `https://picsum.photos/800/400?random=${i}`,
+          },
+        ],
         tags: this.generateArticleTags(topic),
         platform: "medium",
         readingTime: Math.floor(Math.random() * 8) + 3, // 3-10 minutes
@@ -140,23 +159,37 @@ class MediumScraper {
     }
 
     // Check for spam indicators
-    const spamIndicators = ['click here', 'buy now', 'limited time', 'guaranteed results'];
+    const spamIndicators = [
+      "click here",
+      "buy now",
+      "limited time",
+      "guaranteed results",
+    ];
     const contentLower = post.content.toLowerCase();
-    
-    if (spamIndicators.some(indicator => contentLower.includes(indicator))) {
+
+    if (spamIndicators.some((indicator) => contentLower.includes(indicator))) {
       return false;
     }
 
     // Check for professional/educational content
     const qualityIndicators = [
-      'analysis', 'insights', 'experience', 'research', 'study', 'findings',
-      'strategy', 'approach', 'methodology', 'framework', 'principles'
+      "analysis",
+      "insights",
+      "experience",
+      "research",
+      "study",
+      "findings",
+      "strategy",
+      "approach",
+      "methodology",
+      "framework",
+      "principles",
     ];
-    
-    const qualityMatches = qualityIndicators.filter(indicator => 
+
+    const qualityMatches = qualityIndicators.filter((indicator) =>
       contentLower.includes(indicator)
     );
-    
+
     if (qualityMatches.length < 2) {
       return false;
     }
@@ -170,16 +203,24 @@ class MediumScraper {
   generateArticleTags(topic) {
     const baseTags = ["medium", "article", "business"];
     const topicTags = topic.toLowerCase().split(" ").slice(0, 3);
-    
+
     const businessTags = [
-      "strategy", "leadership", "growth", "innovation", "management",
-      "entrepreneurship", "startup", "success", "development", "insights"
+      "strategy",
+      "leadership",
+      "growth",
+      "innovation",
+      "management",
+      "entrepreneurship",
+      "startup",
+      "success",
+      "development",
+      "insights",
     ];
-    
+
     const selectedTags = businessTags
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
-    
+
     return [...baseTags, ...topicTags, ...selectedTags];
   }
 
@@ -189,10 +230,10 @@ class MediumScraper {
    */
   async scrapeContent(config) {
     const { sourceUrl, keywords = [], maxPosts = 50 } = config;
-    
+
     try {
       console.log(`Scraping Medium: ${sourceUrl}`);
-      
+
       // Extract publication or user from URL
       const source = this.extractSource(sourceUrl);
       if (!source) {
@@ -205,24 +246,24 @@ class MediumScraper {
 
       while (posts.length < maxPosts && page < maxPages) {
         const pagePosts = await this.scrapeMediumPage(sourceUrl, page);
-        
+
         if (pagePosts.length === 0) break;
 
         // Filter posts by keywords if provided
-        const filteredPosts = keywords.length > 0 
-          ? pagePosts.filter(post => this.matchesKeywords(post, keywords))
-          : pagePosts;
+        const filteredPosts =
+          keywords.length > 0
+            ? pagePosts.filter((post) => this.matchesKeywords(post, keywords))
+            : pagePosts;
 
         posts.push(...filteredPosts);
         page++;
-        
+
         // Rate limiting
         await this.utils.delay(this.rateLimitDelay);
       }
 
       console.log(`Scraped ${posts.length} posts from Medium`);
       return posts.slice(0, maxPosts);
-
     } catch (error) {
       console.error("Medium scraping error:", error.message);
       throw new Error(`Medium scraping failed: ${error.message}`);
@@ -237,11 +278,13 @@ class MediumScraper {
       // For pagination, Medium uses different approaches
       // This is a simplified implementation
       const pageUrl = page > 0 ? `${url}?page=${page}` : url;
-      
+
       const response = await axios.get(pageUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         },
         timeout: 15000,
       });
@@ -250,26 +293,27 @@ class MediumScraper {
       const posts = [];
 
       // Medium's structure can vary, this is a general approach
-      $('article, .postArticle, [data-testid="post-preview"]').each((index, element) => {
-        try {
-          const post = this.extractPostFromElement($, element);
-          if (post) {
-            posts.push(post);
+      $('article, .postArticle, [data-testid="post-preview"]').each(
+        (index, element) => {
+          try {
+            const post = this.extractPostFromElement($, element);
+            if (post) {
+              posts.push(post);
+            }
+          } catch (error) {
+            console.error("Error extracting Medium post:", error.message);
           }
-        } catch (error) {
-          console.error("Error extracting Medium post:", error.message);
         }
-      });
+      );
 
       return posts;
-
     } catch (error) {
       if (error.response?.status === 429) {
         console.log("Medium rate limited, waiting longer...");
         await this.utils.delay(10000);
         return this.scrapeMediumPage(url, page);
       }
-      
+
       throw error;
     }
   }
@@ -279,45 +323,77 @@ class MediumScraper {
    */
   extractPostFromElement($, element) {
     const $el = $(element);
-    
+
     // Try different selectors for title
-    const title = $el.find('h1, h2, h3, .graf--title, [data-testid="post-preview-title"]').first().text().trim() ||
-                  $el.find('a').first().text().trim();
-    
+    const title =
+      $el
+        .find('h1, h2, h3, .graf--title, [data-testid="post-preview-title"]')
+        .first()
+        .text()
+        .trim() || $el.find("a").first().text().trim();
+
     if (!title) return null;
 
     // Try different selectors for content/subtitle
-    const content = $el.find('.graf--subtitle, .postArticle-content p, [data-testid="post-preview-content"]').first().text().trim() ||
-                   $el.find('p').first().text().trim() ||
-                   title;
+    const content =
+      $el
+        .find(
+          '.graf--subtitle, .postArticle-content p, [data-testid="post-preview-content"]'
+        )
+        .first()
+        .text()
+        .trim() ||
+      $el.find("p").first().text().trim() ||
+      title;
 
     // Extract URL
-    const relativeUrl = $el.find('a').first().attr('href');
+    const relativeUrl = $el.find("a").first().attr("href");
     const url = relativeUrl ? this.resolveUrl(relativeUrl) : null;
-    
+
     if (!url) return null;
 
     // Extract author
-    const author = $el.find('.postMetaInline-authorLockup a, [data-testid="post-preview-author"]').first().text().trim() ||
-                  $el.find('.author').text().trim() ||
-                  'Medium Author';
+    const author =
+      $el
+        .find(
+          '.postMetaInline-authorLockup a, [data-testid="post-preview-author"]'
+        )
+        .first()
+        .text()
+        .trim() ||
+      $el.find(".author").text().trim() ||
+      "Medium Author";
 
     // Extract date
-    const dateText = $el.find('time, .postMetaInline time, [data-testid="post-preview-date"]').first().attr('datetime') ||
-                    $el.find('time, .postMetaInline time').first().text().trim();
-    
+    const dateText =
+      $el
+        .find('time, .postMetaInline time, [data-testid="post-preview-date"]')
+        .first()
+        .attr("datetime") ||
+      $el.find("time, .postMetaInline time").first().text().trim();
+
     const createdAt = dateText ? new Date(dateText) : new Date();
 
     // Extract claps (likes)
-    const clapsText = $el.find('.clapCount, [data-testid="clap-count"]').text().trim();
-    const likes = clapsText ? this.parseNumber(clapsText) : Math.floor(Math.random() * 100);
+    const clapsText = $el
+      .find('.clapCount, [data-testid="clap-count"]')
+      .text()
+      .trim();
+    const likes = clapsText
+      ? this.parseNumber(clapsText)
+      : Math.floor(Math.random() * 100);
 
     // Extract reading time
-    const readingTimeText = $el.find('.readingTime, [data-testid="reading-time"]').text().trim();
-    const readingTime = readingTimeText ? this.parseReadingTime(readingTimeText) : 5;
+    const readingTimeText = $el
+      .find('.readingTime, [data-testid="reading-time"]')
+      .text()
+      .trim();
+    const readingTime = readingTimeText
+      ? this.parseReadingTime(readingTimeText)
+      : 5;
 
     // Extract thumbnail
-    const thumbnail = $el.find('img').first().attr('src') || null;
+    const thumbnail = $el.find("img").first().attr("src") || null;
 
     return {
       id: this.generateIdFromUrl(url),
@@ -347,7 +423,7 @@ class MediumScraper {
     // https://medium.com/@username
     // https://medium.com/publication-name
     // https://publication.medium.com
-    
+
     const match = url.match(/medium\.com\/(@[\w-]+|[\w-]+)/);
     return match ? match[1] : null;
   }
@@ -356,14 +432,14 @@ class MediumScraper {
    * Resolve relative URLs to absolute
    */
   resolveUrl(relativeUrl) {
-    if (relativeUrl.startsWith('http')) {
+    if (relativeUrl.startsWith("http")) {
       return relativeUrl;
     }
-    
-    if (relativeUrl.startsWith('/')) {
+
+    if (relativeUrl.startsWith("/")) {
       return `${this.baseUrl}${relativeUrl}`;
     }
-    
+
     return `${this.baseUrl}/${relativeUrl}`;
   }
 
@@ -372,7 +448,9 @@ class MediumScraper {
    */
   generateIdFromUrl(url) {
     const match = url.match(/\/([a-f0-9]+)$/);
-    return match ? `medium_${match[1]}` : `medium_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return match
+      ? `medium_${match[1]}`
+      : `medium_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
@@ -381,15 +459,19 @@ class MediumScraper {
   parseNumber(text) {
     const match = text.match(/([\d.]+)([KMB]?)/i);
     if (!match) return 0;
-    
+
     const num = parseFloat(match[1]);
     const suffix = match[2]?.toUpperCase();
-    
+
     switch (suffix) {
-      case 'K': return Math.floor(num * 1000);
-      case 'M': return Math.floor(num * 1000000);
-      case 'B': return Math.floor(num * 1000000000);
-      default: return Math.floor(num);
+      case "K":
+        return Math.floor(num * 1000);
+      case "M":
+        return Math.floor(num * 1000000);
+      case "B":
+        return Math.floor(num * 1000000000);
+      default:
+        return Math.floor(num);
     }
   }
 
@@ -406,9 +488,9 @@ class MediumScraper {
    */
   extractMediaUrls($el) {
     const mediaUrls = [];
-    
-    $el.find('img').each((i, img) => {
-      const src = $(img).attr('src');
+
+    $el.find("img").each((i, img) => {
+      const src = $(img).attr("src");
       if (src && this.utils.isImageUrl(src)) {
         mediaUrls.push({
           type: "image",
@@ -416,7 +498,7 @@ class MediumScraper {
         });
       }
     });
-    
+
     return mediaUrls;
   }
 
@@ -425,33 +507,45 @@ class MediumScraper {
    */
   extractTags($el, content) {
     const tags = [];
-    
+
     // Extract tags from Medium's tag elements
     $el.find('.tag, .postTags a, [data-testid="tag"]').each((i, tagEl) => {
       const tag = $(tagEl).text().trim().toLowerCase();
       if (tag) tags.push(tag);
     });
-    
+
     // Extract hashtags from content
     const hashtags = content.match(/#\w+/g);
     if (hashtags) {
-      tags.push(...hashtags.map(tag => tag.toLowerCase().substring(1)));
+      tags.push(...hashtags.map((tag) => tag.toLowerCase().substring(1)));
     }
-    
+
     // Add common business/tech tags based on content
     const businessKeywords = [
-      'business', 'startup', 'entrepreneur', 'technology', 'innovation',
-      'leadership', 'management', 'strategy', 'growth', 'marketing',
-      'productivity', 'success', 'career', 'professional', 'development'
+      "business",
+      "startup",
+      "entrepreneur",
+      "technology",
+      "innovation",
+      "leadership",
+      "management",
+      "strategy",
+      "growth",
+      "marketing",
+      "productivity",
+      "success",
+      "career",
+      "professional",
+      "development",
     ];
-    
+
     const contentLower = content.toLowerCase();
-    businessKeywords.forEach(keyword => {
+    businessKeywords.forEach((keyword) => {
       if (contentLower.includes(keyword)) {
         tags.push(keyword);
       }
     });
-    
+
     return [...new Set(tags)]; // Remove duplicates
   }
 
@@ -459,16 +553,25 @@ class MediumScraper {
    * Extract publication name
    */
   extractPublication($el) {
-    return $el.find('.postMetaInline-authorLockup .link, [data-testid="publication-name"]').first().text().trim() || null;
+    return (
+      $el
+        .find(
+          '.postMetaInline-authorLockup .link, [data-testid="publication-name"]'
+        )
+        .first()
+        .text()
+        .trim() || null
+    );
   }
 
   /**
    * Check if post matches keywords
    */
   matchesKeywords(post, keywords) {
-    const searchText = `${post.title} ${post.content} ${post.tags.join(' ')}`.toLowerCase();
-    
-    return keywords.some(keyword => 
+    const searchText =
+      `${post.title} ${post.content} ${post.tags.join(" ")}`.toLowerCase();
+
+    return keywords.some((keyword) =>
       searchText.includes(keyword.toLowerCase())
     );
   }
@@ -481,21 +584,25 @@ class MediumScraper {
       const url = `${this.baseUrl}/${publicationName}`;
       const response = await axios.get(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         },
       });
 
       const $ = cheerio.load(response.data);
-      
+
       return {
         name: publicationName,
-        title: $('h1').first().text().trim(),
-        description: $('.description, .bio').first().text().trim(),
-        followers: this.parseNumber($('.followerCount').text().trim()),
+        title: $("h1").first().text().trim(),
+        description: $(".description, .bio").first().text().trim(),
+        followers: this.parseNumber($(".followerCount").text().trim()),
         url: url,
       };
     } catch (error) {
-      console.error(`Error fetching Medium publication info for ${publicationName}:`, error.message);
+      console.error(
+        `Error fetching Medium publication info for ${publicationName}:`,
+        error.message
+      );
       return null;
     }
   }

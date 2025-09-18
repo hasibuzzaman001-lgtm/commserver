@@ -52,9 +52,8 @@ class SchedulerService {
         `Setting up scraping schedules for ${communities.length} communities`
       );
 
-      for (const community of communities) {
-        this.scheduleCommunityScrapingJob(community);
-      }
+      // Schedule single job for all communities (every 5 minutes)
+      this.scheduleRegularScrapingJob();
     } catch (error) {
       console.error("Error scheduling scraping jobs:", error);
       throw error;
@@ -62,10 +61,10 @@ class SchedulerService {
   }
 
   /**
-   * Schedule scraping job for a specific community
+   * Schedule regular scraping job (every 5 minutes, 1 post per platform)
    */
-  scheduleCommunityScrapingJob(community) {
-    const jobId = `scrape_${community._id}`;
+  scheduleRegularScrapingJob() {
+    const jobId = "regular_scraping";
 
     // Stop existing job if it exists
     if (this.jobs.has(jobId)) {
@@ -73,42 +72,22 @@ class SchedulerService {
       this.jobs.delete(jobId);
     }
 
-    // Determine cron schedule based on frequency
-    let cronSchedule;
-    switch (community.scrapingConfig.frequency) {
-      case "hourly":
-        cronSchedule = "0 * * * *"; // Every hour
-        break;
-      case "daily":
-        cronSchedule = "0 8 * * *"; // Daily at 8 AM
-        break;
-      case "weekly":
-        cronSchedule = "0 8 * * 1"; // Weekly on Monday at 8 AM
-        break;
-      default:
-        cronSchedule = "0 8 * * *"; // Default to daily
-    }
+    // Every 5 minutes
+    const cronSchedule = "*/5 * * * *";
 
-    // Create and start the cron job
     const job = cron.schedule(
       cronSchedule,
       async () => {
-        console.log(
-          `🔄 Starting scheduled scraping for community: ${community.name}`
-        );
+        console.log(`🔄 Starting regular scraping (1 post per platform)...`);
 
         try {
-          const result = await this.scraperManager.scrapeCommunity(
-            community._id
-          );
+          const result =
+            await this.scraperManager.scrapeSinglePostFromAllCommunities();
           console.log(
-            `✅ Scheduled scraping completed for ${community.name}: ${result.postsCreated} posts created`
+            `✅ Regular scraping completed: ${result.totalPostsCreated} posts created`
           );
         } catch (error) {
-          console.error(
-            `❌ Scheduled scraping failed for ${community.name}:`,
-            error.message
-          );
+          console.error(`❌ Regular scraping failed:`, error.message);
         }
       },
       {
@@ -118,51 +97,14 @@ class SchedulerService {
     );
 
     this.jobs.set(jobId, job);
-    console.log(
-      `📅 Scheduled ${community.scrapingConfig.frequency} scraping for ${community.name}`
-    );
+    console.log(`📅 Scheduled regular scraping every 5 minutes`);
   }
 
   /**
-   * Schedule cleanup job
+   * Remove cleanup job scheduling (no longer needed)
    */
   scheduleCleanupJob() {
-    const jobId = "cleanup_posts";
-
-    // Stop existing job if it exists
-    if (this.jobs.has(jobId)) {
-      this.jobs.get(jobId).stop();
-      this.jobs.delete(jobId);
-    }
-
-    // Daily cleanup at 2 AM UTC
-    const job = cron.schedule(
-      "0 2 * * *",
-      async () => {
-        console.log("🧹 Starting scheduled post cleanup...");
-
-        try {
-          const result = await this.scraperManager.cleanupPosts({
-            olderThanDays: 30,
-            minQualityScore: 0.3,
-            maxPostsPerCommunity: 1000,
-          });
-
-          console.log(
-            `✅ Scheduled cleanup completed: ${result.totalCleaned} posts cleaned`
-          );
-        } catch (error) {
-          console.error("❌ Scheduled cleanup failed:", error.message);
-        }
-      },
-      {
-        scheduled: true,
-        timezone: "UTC",
-      }
-    );
-
-    this.jobs.set(jobId, job);
-    console.log("📅 Scheduled daily post cleanup at 2 AM UTC");
+    console.log("📅 Cleanup job scheduling disabled as requested");
   }
 
   /**

@@ -9,188 +9,107 @@ class RedditScraper {
   }
 
   /**
-   * Scrape authentic content from Reddit with enhanced validation
-   */
-  async scrapeAuthenticContent(config) {
-    const { sourceUrl, keywords = [], maxPosts = 50, authenticityMode = true } = config;
-    
-    try {
-      console.log(`🔍 Scraping authentic Reddit content: ${sourceUrl}`);
-      
-      const subreddit = this.extractSubreddit(sourceUrl);
-      if (!subreddit) {
-        throw new Error("Invalid Reddit URL - could not extract subreddit");
-      }
-
-      const posts = [];
-      let after = null;
-      let fetchedCount = 0;
-
-      // Fetch posts with authenticity focus
-      while (fetchedCount < maxPosts * 2) { // Get more to filter for authenticity
-        const batchSize = Math.min(25, maxPosts * 2 - fetchedCount);
-        const batchPosts = await this.fetchAuthenticRedditPosts(subreddit, batchSize, after);
-        
-        if (batchPosts.length === 0) break;
-
-        // Filter for authentic content
-        const authenticPosts = batchPosts.filter(post => this.isAuthenticRedditPost(post));
-        
-        // Apply keyword filtering if provided
-        const filteredPosts = keywords.length > 0 
-          ? authenticPosts.filter(post => this.matchesKeywords(post, keywords))
-          : authenticPosts;
-
-        posts.push(...filteredPosts);
-        fetchedCount += batchPosts.length;
-        
-        after = batchPosts[batchPosts.length - 1]?.name;
-        
-        // Stop if we have enough authentic posts
-        if (posts.length >= maxPosts) break;
-        
-        await this.utils.delay(this.rateLimitDelay);
-      }
-
-      console.log(`✅ Scraped ${posts.length} authentic posts from r/${subreddit}`);
-      return posts.slice(0, maxPosts);
-
-    } catch (error) {
-      console.error("Reddit authentic scraping error:", error.message);
-      throw new Error(`Reddit authentic scraping failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Fetch authentic Reddit posts with enhanced filtering
-   */
-  async fetchAuthenticRedditPosts(subreddit, limit = 25, after = null) {
-    try {
-      const url = `${this.baseUrl}/r/${subreddit}/hot.json`;
-      const params = {
-        limit,
-        raw_json: 1,
-      };
-      
-      if (after) {
-        params.after = after;
-      }
-
-      const response = await axios.get(url, {
-        params,
-        headers: {
-          'User-Agent': 'AuthenticContentBot/2.0 (by /u/CommunityBot)',
-        },
-        timeout: 15000,
-      });
-
-      if (!response.data?.data?.children) {
-        return [];
-      }
-
-      return response.data.data.children
-        .map(child => this.transformRedditPost(child.data))
-        .filter(post => post !== null);
-
-    } catch (error) {
-      if (error.response?.status === 429) {
-        console.log("Rate limited, waiting longer...");
-        await this.utils.delay(10000);
-        return this.fetchAuthenticRedditPosts(subreddit, limit, after);
-      }
-      
-      throw error;
-    }
-  }
-
-  /**
-   * Check if Reddit post is authentic
-   */
-  isAuthenticRedditPost(post) {
-    // Filter out deleted/removed posts
-    if (post.author === '[deleted]' || post.content === '[removed]' || post.content === '[deleted]') {
-      return false;
-    }
-
-    // Filter out posts with suspicious patterns
-    if (post.title.includes('[removed]') || post.title.includes('[deleted]')) {
-      return false;
-    }
-
-    // Filter out very low effort posts
-    if (post.title.length < 10 || (post.content && post.content.length < 20)) {
-      return false;
-    }
-
-    // Filter out posts with suspicious engagement (too perfect ratios)
-    if (post.likes > 1000 && post.comments === 0) {
-      return false;
-    }
-
-    // Filter out obvious spam/promotional content
-    const spamIndicators = ['buy now', 'click here', 'limited time', 'free money', 'guaranteed'];
-    const fullText = `${post.title} ${post.content}`.toLowerCase();
-    
-    if (spamIndicators.some(indicator => fullText.includes(indicator))) {
-      return false;
-    }
-
-    // Check for minimum engagement to ensure it's not a bot post
-    if (post.likes < 2 && post.comments === 0) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Scrape content from Reddit
+   * Scrape real content from Reddit API
    */
   async scrapeContent(config) {
-    const { sourceUrl, keywords = [], maxPosts = 50 } = config;
-    
+    const {
+      sourceUrl,
+      keywords = [],
+      maxPosts = 50,
+      authenticityMode = true,
+    } = config;
+
     try {
-      console.log(`Scraping Reddit: ${sourceUrl}`);
-      
-      // Extract subreddit from URL
+      console.log(`🔍 Scraping Reddit content: ${sourceUrl}`);
+
       const subreddit = this.extractSubreddit(sourceUrl);
       if (!subreddit) {
         throw new Error("Invalid Reddit URL - could not extract subreddit");
       }
 
-      const posts = [];
-      let after = null;
-      let fetchedCount = 0;
+      // Fetch real posts from Reddit API
+      const posts = await this.fetchRedditPosts(subreddit, maxPosts);
 
-      // Fetch posts in batches
-      while (fetchedCount < maxPosts) {
-        const batchSize = Math.min(25, maxPosts - fetchedCount);
-        const batchPosts = await this.fetchRedditPosts(subreddit, batchSize, after);
-        
-        if (batchPosts.length === 0) break;
+      // Filter by keywords if provided
+      const filteredPosts =
+        keywords.length > 0
+          ? posts.filter((post) => this.matchesKeywords(post, keywords))
+          : posts;
 
-        // Filter posts by keywords if provided
-        const filteredPosts = keywords.length > 0 
-          ? batchPosts.filter(post => this.matchesKeywords(post, keywords))
-          : batchPosts;
-
-        posts.push(...filteredPosts);
-        fetchedCount += batchPosts.length;
-        
-        // Get pagination token
-        after = batchPosts[batchPosts.length - 1]?.name;
-        
-        // Rate limiting
-        await this.utils.delay(this.rateLimitDelay);
-      }
-
-      console.log(`Scraped ${posts.length} posts from r/${subreddit}`);
-      return posts.slice(0, maxPosts);
-
+      console.log(
+        `✅ Scraped ${filteredPosts.length} posts from r/${subreddit}`
+      );
+      return filteredPosts.slice(0, maxPosts);
     } catch (error) {
       console.error("Reddit scraping error:", error.message);
       throw new Error(`Reddit scraping failed: ${error.message}`);
     }
+  }
+
+  /**
+   * Scrape comments for a specific post
+   */
+  async scrapePostComments(postId, maxComments = 10) {
+    try {
+      const url = `${this.baseUrl}/comments/${postId}.json`;
+
+      const response = await axios.get(url, {
+        params: { raw_json: 1, limit: maxComments },
+        headers: {
+          "User-Agent": "CommunityBot/1.0 (by /u/CommunityBot)",
+        },
+        timeout: 15000,
+      });
+
+      if (
+        !response.data ||
+        !Array.isArray(response.data) ||
+        response.data.length < 2
+      ) {
+        return [];
+      }
+
+      // Reddit returns [post_data, comments_data]
+      const commentsData = response.data[1];
+      if (!commentsData?.data?.children) {
+        return [];
+      }
+
+      return commentsData.data.children
+        .filter(
+          (child) =>
+            child.data && child.data.body && child.data.body !== "[deleted]"
+        )
+        .map((child) => this.transformRedditComment(child.data))
+        .slice(0, maxComments);
+    } catch (error) {
+      if (error.response?.status === 429) {
+        console.log("Rate limited, waiting longer...");
+        await this.utils.delay(10000);
+        return this.scrapePostComments(postId, maxComments);
+      }
+
+      console.error(
+        `Error scraping comments for post ${postId}:`,
+        error.message
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Transform Reddit comment data
+   */
+  transformRedditComment(redditComment) {
+    return {
+      id: redditComment.id,
+      content: redditComment.body,
+      author: redditComment.author,
+      createdAt: new Date(redditComment.created_utc * 1000),
+      likes: redditComment.ups || 0,
+      parentId: redditComment.parent_id,
+      platform: "reddit",
+    };
   }
 
   /**
@@ -203,7 +122,7 @@ class RedditScraper {
         limit,
         raw_json: 1,
       };
-      
+
       if (after) {
         params.after = after;
       }
@@ -211,7 +130,7 @@ class RedditScraper {
       const response = await axios.get(url, {
         params,
         headers: {
-          'User-Agent': 'CommunityBot/1.0 (by /u/CommunityBot)',
+          "User-Agent": "CommunityBot/1.0 (by /u/CommunityBot)",
         },
         timeout: 10000,
       });
@@ -220,15 +139,16 @@ class RedditScraper {
         return [];
       }
 
-      return response.data.data.children.map(child => this.transformRedditPost(child.data));
-
+      return response.data.data.children.map((child) =>
+        this.transformRedditPost(child.data)
+      );
     } catch (error) {
       if (error.response?.status === 429) {
         console.log("Rate limited, waiting longer...");
         await this.utils.delay(5000);
         return this.fetchRedditPosts(subreddit, limit, after);
       }
-      
+
       throw error;
     }
   }
@@ -270,14 +190,18 @@ class RedditScraper {
    * Extract thumbnail URL
    */
   extractThumbnail(post) {
-    if (post.thumbnail && post.thumbnail !== "self" && post.thumbnail !== "default") {
+    if (
+      post.thumbnail &&
+      post.thumbnail !== "self" &&
+      post.thumbnail !== "default"
+    ) {
       return post.thumbnail;
     }
-    
+
     if (post.preview?.images?.[0]?.source?.url) {
-      return post.preview.images[0].source.url.replace(/&amp;/g, '&');
+      return post.preview.images[0].source.url.replace(/&amp;/g, "&");
     }
-    
+
     return null;
   }
 
@@ -286,7 +210,7 @@ class RedditScraper {
    */
   extractMediaUrls(post) {
     const mediaUrls = [];
-    
+
     // Image posts
     if (post.url && this.utils.isImageUrl(post.url)) {
       mediaUrls.push({
@@ -294,7 +218,7 @@ class RedditScraper {
         url: post.url,
       });
     }
-    
+
     // Video posts
     if (post.is_video && post.media?.reddit_video?.fallback_url) {
       mediaUrls.push({
@@ -302,19 +226,19 @@ class RedditScraper {
         url: post.media.reddit_video.fallback_url,
       });
     }
-    
+
     // Gallery posts
     if (post.is_gallery && post.media_metadata) {
-      Object.values(post.media_metadata).forEach(media => {
+      Object.values(post.media_metadata).forEach((media) => {
         if (media.s?.u) {
           mediaUrls.push({
             type: "image",
-            url: media.s.u.replace(/&amp;/g, '&'),
+            url: media.s.u.replace(/&amp;/g, "&"),
           });
         }
       });
     }
-    
+
     return mediaUrls;
   }
 
@@ -323,24 +247,24 @@ class RedditScraper {
    */
   extractTags(post) {
     const tags = [];
-    
+
     // Add subreddit as tag
     if (post.subreddit) {
       tags.push(post.subreddit.toLowerCase());
     }
-    
+
     // Add flair as tag
     if (post.link_flair_text) {
       tags.push(post.link_flair_text.toLowerCase());
     }
-    
+
     // Extract hashtags from title and content
-    const text = `${post.title} ${post.selftext || ''}`;
+    const text = `${post.title} ${post.selftext || ""}`;
     const hashtags = text.match(/#\w+/g);
     if (hashtags) {
-      tags.push(...hashtags.map(tag => tag.toLowerCase().substring(1)));
+      tags.push(...hashtags.map((tag) => tag.toLowerCase().substring(1)));
     }
-    
+
     return [...new Set(tags)]; // Remove duplicates
   }
 
@@ -348,9 +272,10 @@ class RedditScraper {
    * Check if post matches keywords
    */
   matchesKeywords(post, keywords) {
-    const searchText = `${post.title} ${post.content} ${post.tags.join(' ')}`.toLowerCase();
-    
-    return keywords.some(keyword => 
+    const searchText =
+      `${post.title} ${post.content} ${post.tags.join(" ")}`.toLowerCase();
+
+    return keywords.some((keyword) =>
       searchText.includes(keyword.toLowerCase())
     );
   }
@@ -360,11 +285,14 @@ class RedditScraper {
    */
   async getSubredditInfo(subreddit) {
     try {
-      const response = await axios.get(`${this.baseUrl}/r/${subreddit}/about.json`, {
-        headers: {
-          'User-Agent': 'CommunityBot/1.0 (by /u/CommunityBot)',
-        },
-      });
+      const response = await axios.get(
+        `${this.baseUrl}/r/${subreddit}/about.json`,
+        {
+          headers: {
+            "User-Agent": "CommunityBot/1.0 (by /u/CommunityBot)",
+          },
+        }
+      );
 
       const data = response.data.data;
       return {
@@ -373,10 +301,13 @@ class RedditScraper {
         description: data.public_description,
         subscribers: data.subscribers,
         created: new Date(data.created_utc * 1000),
-        isActive: !data.quarantine && data.subreddit_type === 'public',
+        isActive: !data.quarantine && data.subreddit_type === "public",
       };
     } catch (error) {
-      console.error(`Error fetching subreddit info for r/${subreddit}:`, error.message);
+      console.error(
+        `Error fetching subreddit info for r/${subreddit}:`,
+        error.message
+      );
       return null;
     }
   }

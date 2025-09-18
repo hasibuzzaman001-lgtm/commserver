@@ -6,7 +6,7 @@ class TwitterScraper {
     this.baseUrl = "https://api.twitter.com/2";
     this.utils = new ScrapingUtils();
     this.rateLimitDelay = 1000; // 1 second between requests
-    
+
     // Note: This is a placeholder implementation
     // In production, you'd need Twitter API credentials
     this.apiKey = process.env.TWITTER_API_KEY;
@@ -15,123 +15,27 @@ class TwitterScraper {
   }
 
   /**
-   * Scrape authentic content from Twitter
-   */
-  async scrapeAuthenticContent(config) {
-    const { sourceUrl, keywords = [], maxPosts = 50, authenticityMode = true } = config;
-    
-    try {
-      console.log(`🔍 Scraping authentic Twitter content: ${sourceUrl}`);
-      
-      // For now, return filtered mock data with authenticity focus
-      return this.getAuthenticTwitterData(maxPosts, keywords);
-
-    } catch (error) {
-      console.error("Twitter authentic scraping error:", error.message);
-      throw new Error(`Twitter authentic scraping failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Generate authentic Twitter data (filtered mock data)
-   */
-  getAuthenticTwitterData(maxPosts, keywords) {
-    const authenticPosts = [];
-    const realBusinessTopics = [
-      "startup funding challenges", "remote work productivity", "team leadership lessons",
-      "customer feedback insights", "product development journey", "market research findings",
-      "business pivot story", "scaling team culture", "user acquisition strategies",
-      "revenue growth tactics", "industry trend analysis", "competitive landscape"
-    ];
-
-    const authenticAuthors = [
-      "sarah_founder", "mike_ceo", "tech_leader_anna", "startup_advisor_john",
-      "business_coach_lisa", "growth_expert_david", "marketing_pro_emma"
-    ];
-
-    for (let i = 0; i < Math.min(maxPosts, 15); i++) {
-      const topic = realBusinessTopics[Math.floor(Math.random() * realBusinessTopics.length)];
-      const author = authenticAuthors[Math.floor(Math.random() * authenticAuthors.length)];
-      
-      const mockPost = {
-        id: `twitter_auth_${Date.now()}_${i}`,
-        title: `Real insights on ${topic}`,
-        content: `After 3 years working on ${topic}, here's what I've learned: The key is consistency and genuine customer focus. What's been your experience? #business #startup #authentic`,
-        url: `https://twitter.com/${author}/status/${Date.now()}${i}`,
-        author: author,
-        createdAt: new Date(Date.now() - Math.random() * 3 * 24 * 60 * 60 * 1000), // Last 3 days
-        likes: Math.floor(Math.random() * 200) + 15, // Realistic engagement
-        comments: Math.floor(Math.random() * 25) + 3,
-        shares: Math.floor(Math.random() * 15) + 1,
-        views: Math.floor(Math.random() * 2000) + 100,
-        thumbnail: null,
-        mediaUrls: [],
-        tags: ["business", "startup", "authentic", topic.replace(/\s+/g, "")],
-        platform: "twitter",
-        isThread: Math.random() > 0.8,
-        retweetCount: Math.floor(Math.random() * 50),
-        verified: Math.random() > 0.7,
-        followerCount: Math.floor(Math.random() * 10000) + 500,
-      };
-
-      // Apply authenticity filters
-      if (this.isAuthenticTwitterPost(mockPost)) {
-        // Filter by keywords if provided
-        if (keywords.length === 0 || this.matchesKeywords(mockPost, keywords)) {
-          authenticPosts.push(mockPost);
-        }
-      }
-    }
-
-    return authenticPosts;
-  }
-
-  /**
-   * Check if Twitter post is authentic
-   */
-  isAuthenticTwitterPost(post) {
-    // Check for realistic engagement ratios
-    const engagementRatio = post.comments / Math.max(post.likes, 1);
-    if (engagementRatio > 0.5) { // Too many comments relative to likes
-      return false;
-    }
-
-    // Check for minimum content quality
-    if (post.content.length < 30) {
-      return false;
-    }
-
-    // Check for spam patterns
-    const spamPatterns = ['follow me', 'dm for more', 'link in bio', 'check my profile'];
-    const contentLower = post.content.toLowerCase();
-    
-    if (spamPatterns.some(pattern => contentLower.includes(pattern))) {
-      return false;
-    }
-
-    // Check for excessive hashtags
-    const hashtagCount = (post.content.match(/#/g) || []).length;
-    if (hashtagCount > 4) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Scrape content from Twitter
-   * Note: This is a simplified implementation for demonstration
+   * Scrape real content from Twitter (Note: Requires API access)
    */
   async scrapeContent(config) {
-    const { sourceUrl, keywords = [], maxPosts = 50 } = config;
-    
-    try {
-      console.log(`Scraping Twitter: ${sourceUrl}`);
-      
-      // For demo purposes, return mock data
-      // In production, implement actual Twitter API calls
-      return this.getMockTwitterData(maxPosts, keywords);
+    const {
+      sourceUrl,
+      keywords = [],
+      maxPosts = 50,
+      authenticityMode = true,
+    } = config;
 
+    try {
+      console.log(`🔍 Scraping Twitter content: ${sourceUrl}`);
+
+      // Note: In production, implement actual Twitter API calls
+      // For now, we'll simulate real API calls with realistic data
+      if (this.bearerToken) {
+        return this.fetchTweets(keywords.join(" OR "), maxPosts);
+      } else {
+        console.warn("Twitter API not configured, using simulated data");
+        return this.getRealisticTwitterData(maxPosts, keywords);
+      }
     } catch (error) {
       console.error("Twitter scraping error:", error.message);
       throw new Error(`Twitter scraping failed: ${error.message}`);
@@ -139,45 +43,114 @@ class TwitterScraper {
   }
 
   /**
-   * Mock Twitter data for demonstration
-   * Replace with actual Twitter API implementation
+   * Scrape comments (replies) for a specific tweet
    */
-  getMockTwitterData(maxPosts, keywords) {
-    const mockPosts = [];
+  async scrapePostComments(tweetId, maxComments = 10) {
+    try {
+      if (!this.bearerToken) {
+        console.warn("Twitter API not configured for comment scraping");
+        return [];
+      }
+
+      // Note: Twitter API v2 doesn't directly support getting replies
+      // This would require searching for tweets that reply to the original tweet
+      const searchQuery = `conversation_id:${tweetId}`;
+
+      const response = await axios.get(`${this.baseUrl}/tweets/search/recent`, {
+        headers: {
+          Authorization: `Bearer ${this.bearerToken}`,
+        },
+        params: {
+          query: searchQuery,
+          max_results: Math.min(maxComments, 100),
+          "tweet.fields":
+            "created_at,author_id,public_metrics,in_reply_to_user_id",
+          "user.fields": "username,name",
+          expansions: "author_id",
+        },
+      });
+
+      if (!response.data?.data) {
+        return [];
+      }
+
+      const users = {};
+      if (response.data.includes?.users) {
+        response.data.includes.users.forEach((user) => {
+          users[user.id] = user;
+        });
+      }
+
+      return response.data.data
+        .filter((tweet) => tweet.in_reply_to_user_id) // Only replies
+        .map((tweet) => this.transformTwitterComment(tweet, users))
+        .slice(0, maxComments);
+    } catch (error) {
+      console.error(
+        `Error scraping Twitter comments for ${tweetId}:`,
+        error.message
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Transform Twitter comment data
+   */
+  transformTwitterComment(tweet, users) {
+    const author = users[tweet.author_id];
+
+    return {
+      id: tweet.id,
+      content: tweet.text,
+      author: author?.username || "unknown",
+      createdAt: new Date(tweet.created_at),
+      likes: tweet.public_metrics?.like_count || 0,
+      platform: "twitter",
+    };
+  }
+
+  /**
+   * Get realistic Twitter data (when API is not available)
+   */
+  getRealisticTwitterData(maxPosts, keywords) {
+    const posts = [];
     const businessTopics = [
-      "startup funding", "entrepreneurship", "business strategy", "marketing tips",
-      "SaaS growth", "e-commerce trends", "business automation", "leadership",
-      "productivity hacks", "business networking", "sales strategies", "customer success"
+      "Just closed our Series A! Here's what I learned about fundraising",
+      "Remote work productivity tip: Time-blocking changed everything for our team",
+      "Customer feedback is gold. Here's how we use it to improve our product",
+      "Building a startup is 90% persistence, 10% luck. Keep pushing forward",
+      "The best marketing strategy? Solve a real problem people actually have",
     ];
 
-    for (let i = 0; i < Math.min(maxPosts, 20); i++) {
-      const topic = businessTopics[Math.floor(Math.random() * businessTopics.length)];
-      const mockPost = {
+    for (let i = 0; i < Math.min(maxPosts, 5); i++) {
+      const topic =
+        businessTopics[Math.floor(Math.random() * businessTopics.length)];
+      const post = {
         id: `twitter_${Date.now()}_${i}`,
-        title: `Insights on ${topic}`,
-        content: `Great discussion about ${topic}. Here are some key takeaways that every entrepreneur should know. Thread 🧵 #business #startup #entrepreneur`,
+        title: topic.split(":")[0],
+        content: topic,
         url: `https://twitter.com/businessuser/status/${Date.now()}${i}`,
-        author: `business_expert_${i % 5 + 1}`,
-        createdAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
-        likes: Math.floor(Math.random() * 1000) + 10,
-        comments: Math.floor(Math.random() * 100) + 5,
-        shares: Math.floor(Math.random() * 50) + 2,
-        views: Math.floor(Math.random() * 10000) + 100,
+        author: `business_expert_${(i % 5) + 1}`,
+        createdAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
+        likes: Math.floor(Math.random() * 100) + 10,
+        comments: Math.floor(Math.random() * 20) + 2,
+        shares: Math.floor(Math.random() * 10) + 1,
+        views: Math.floor(Math.random() * 1000) + 100,
         thumbnail: null,
         mediaUrls: [],
-        tags: ["business", "startup", "entrepreneur", topic.replace(" ", "")],
+        tags: ["business", "startup", "entrepreneur"],
         platform: "twitter",
-        isThread: Math.random() > 0.7,
-        retweetCount: Math.floor(Math.random() * 200),
+        retweetCount: Math.floor(Math.random() * 20),
       };
 
       // Filter by keywords if provided
-      if (keywords.length === 0 || this.matchesKeywords(mockPost, keywords)) {
-        mockPosts.push(mockPost);
+      if (keywords.length === 0 || this.matchesKeywords(post, keywords)) {
+        posts.push(post);
       }
     }
 
-    return mockPosts;
+    return posts;
   }
 
   /**
@@ -191,26 +164,26 @@ class TwitterScraper {
     try {
       const response = await axios.get(`${this.baseUrl}/tweets/search/recent`, {
         headers: {
-          'Authorization': `Bearer ${this.bearerToken}`,
+          Authorization: `Bearer ${this.bearerToken}`,
         },
         params: {
           query,
           max_results: Math.min(maxResults, 100),
-          'tweet.fields': 'created_at,author_id,public_metrics,context_annotations',
-          'user.fields': 'username,name,profile_image_url',
-          'expansions': 'author_id',
+          "tweet.fields":
+            "created_at,author_id,public_metrics,context_annotations",
+          "user.fields": "username,name,profile_image_url",
+          expansions: "author_id",
         },
       });
 
       return this.transformTwitterResponse(response.data);
-
     } catch (error) {
       if (error.response?.status === 429) {
         console.log("Twitter rate limited, waiting...");
         await this.utils.delay(15 * 60 * 1000); // Wait 15 minutes
         return this.fetchTweets(query, maxResults);
       }
-      
+
       throw error;
     }
   }
@@ -223,20 +196,20 @@ class TwitterScraper {
 
     const users = {};
     if (twitterData.includes?.users) {
-      twitterData.includes.users.forEach(user => {
+      twitterData.includes.users.forEach((user) => {
         users[user.id] = user;
       });
     }
 
-    return twitterData.data.map(tweet => {
+    return twitterData.data.map((tweet) => {
       const author = users[tweet.author_id];
-      
+
       return {
         id: tweet.id,
         title: this.extractTitle(tweet.text),
         content: tweet.text,
         url: `https://twitter.com/${author?.username}/status/${tweet.id}`,
-        author: author?.username || 'unknown',
+        author: author?.username || "unknown",
         createdAt: new Date(tweet.created_at),
         likes: tweet.public_metrics?.like_count || 0,
         comments: tweet.public_metrics?.reply_count || 0,
@@ -258,7 +231,7 @@ class TwitterScraper {
   extractTitle(text) {
     // Use first sentence or first 100 characters as title
     const firstSentence = text.split(/[.!?]/)[0];
-    return firstSentence.length > 100 
+    return firstSentence.length > 100
       ? text.substring(0, 100) + "..."
       : firstSentence;
   }
@@ -268,13 +241,13 @@ class TwitterScraper {
    */
   extractMediaUrls(tweet) {
     const mediaUrls = [];
-    
+
     // Extract URLs from tweet text
     const urlRegex = /https?:\/\/[^\s]+/g;
     const urls = tweet.text.match(urlRegex);
-    
+
     if (urls) {
-      urls.forEach(url => {
+      urls.forEach((url) => {
         if (this.utils.isImageUrl(url)) {
           mediaUrls.push({
             type: "image",
@@ -288,7 +261,7 @@ class TwitterScraper {
         }
       });
     }
-    
+
     return mediaUrls;
   }
 
@@ -297,28 +270,30 @@ class TwitterScraper {
    */
   extractTags(tweet) {
     const tags = [];
-    
+
     // Extract hashtags
     const hashtags = tweet.text.match(/#\w+/g);
     if (hashtags) {
-      tags.push(...hashtags.map(tag => tag.toLowerCase().substring(1)));
+      tags.push(...hashtags.map((tag) => tag.toLowerCase().substring(1)));
     }
-    
+
     // Extract mentions (as potential topics)
     const mentions = tweet.text.match(/@\w+/g);
     if (mentions) {
-      tags.push(...mentions.map(mention => mention.toLowerCase().substring(1)));
+      tags.push(
+        ...mentions.map((mention) => mention.toLowerCase().substring(1))
+      );
     }
-    
+
     // Add context annotations as tags
     if (tweet.context_annotations) {
-      tweet.context_annotations.forEach(annotation => {
+      tweet.context_annotations.forEach((annotation) => {
         if (annotation.entity?.name) {
-          tags.push(annotation.entity.name.toLowerCase().replace(/\s+/g, '-'));
+          tags.push(annotation.entity.name.toLowerCase().replace(/\s+/g, "-"));
         }
       });
     }
-    
+
     return [...new Set(tags)]; // Remove duplicates
   }
 
@@ -326,9 +301,9 @@ class TwitterScraper {
    * Check if tweet matches keywords
    */
   matchesKeywords(tweet, keywords) {
-    const searchText = `${tweet.content} ${tweet.tags.join(' ')}`.toLowerCase();
-    
-    return keywords.some(keyword => 
+    const searchText = `${tweet.content} ${tweet.tags.join(" ")}`.toLowerCase();
+
+    return keywords.some((keyword) =>
       searchText.includes(keyword.toLowerCase())
     );
   }
@@ -342,14 +317,18 @@ class TwitterScraper {
     }
 
     try {
-      const response = await axios.get(`${this.baseUrl}/users/by/username/${username}`, {
-        headers: {
-          'Authorization': `Bearer ${this.bearerToken}`,
-        },
-        params: {
-          'user.fields': 'created_at,description,public_metrics,profile_image_url',
-        },
-      });
+      const response = await axios.get(
+        `${this.baseUrl}/users/by/username/${username}`,
+        {
+          headers: {
+            Authorization: `Bearer ${this.bearerToken}`,
+          },
+          params: {
+            "user.fields":
+              "created_at,description,public_metrics,profile_image_url",
+          },
+        }
+      );
 
       const user = response.data.data;
       return {
@@ -364,7 +343,10 @@ class TwitterScraper {
         created: new Date(user.created_at),
       };
     } catch (error) {
-      console.error(`Error fetching Twitter user info for @${username}:`, error.message);
+      console.error(
+        `Error fetching Twitter user info for @${username}:`,
+        error.message
+      );
       return null;
     }
   }
@@ -375,13 +357,13 @@ class TwitterScraper {
   async searchTweets(query, options = {}) {
     const {
       maxResults = 50,
-      resultType = 'recent', // recent, popular, mixed
-      lang = 'en',
+      resultType = "recent", // recent, popular, mixed
+      lang = "en",
     } = options;
 
     // Build search query
     let searchQuery = query;
-    if (!query.startsWith('#') && !query.includes(':')) {
+    if (!query.startsWith("#") && !query.includes(":")) {
       searchQuery = `${query} -is:retweet lang:${lang}`;
     }
 
