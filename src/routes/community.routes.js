@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  commynityBySlug,
   createCommunity,
   gettAllCommunity,
 } from "../controllers/community.controller.js";
@@ -10,6 +11,7 @@ const router = Router();
 
 //Public Routes
 router.route("/").get(gettAllCommunity);
+router.route("/:communitySlug").get(commynityBySlug);
 
 // Protected Routes
 router.route("/create").post(verifyJWT, upload.single("icon"), createCommunity);

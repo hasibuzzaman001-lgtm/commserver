@@ -9,8 +9,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Apply auto-scraping middleware to GET all posts route
-router.route("/").get(getAllPosts);
+router.route("/").get(autoScrapeMiddleware, getAllPosts);
 router.route("/:postId").get(getPostById);
 
 router.use(verifyJWT);

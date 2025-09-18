@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Community } from "../models/community.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -51,7 +52,7 @@ const createCommunity = asyncHandler(async (req, res) => {
 const gettAllCommunity = asyncHandler(async (req, res) => {
   const communities = await Community.find(
     {},
-    { name: 1, description: 1, category: 1, lastUpdatedAt: 1, icon: 1 }
+    { name: 1, slug: 1, description: 1, category: 1, lastUpdatedAt: 1, icon: 1 }
   ).sort({ lastUpdatedAt: -1 });
 
   return res
@@ -61,4 +62,64 @@ const gettAllCommunity = asyncHandler(async (req, res) => {
     );
 });
 
-export { gettAllCommunity, createCommunity };
+const commynityBySlug = asyncHandler(async (req, res) => {
+  const { communitySlug } = req.params;
+  const pipeline = [
+    {
+      $match: { slug: { $regex: `^${communitySlug}$`, $options: "i" } },
+    },
+    {
+      $lookup: {
+        from: "posts",
+        let: { communityId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$community", "$$communityId"] },
+              status: "active",
+            },
+          },
+          { $sort: { createdAt: -1 } }, // newest posts first
+          {
+            $lookup: {
+              from: "communities",
+              localField: "community",
+              foreignField: "_id",
+              as: "community",
+              pipeline: [{ $project: { name: 1, category: 1, slug: 1 } }],
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [{ $project: { username: 1, fullName: 1, avatar: 1 } }],
+            },
+          },
+          {
+            $addFields: {
+              community: { $first: "$community" },
+              owner: { $first: "$owner" },
+            },
+          },
+        ],
+        as: "posts",
+      },
+    },
+  ];
+
+  const communityAggregate = await Community.aggregate(pipeline);
+  const community = communityAggregate[0];
+
+  if (!community) {
+    throw new ApiError(404, "Community not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, community, "Community fetched successfully"));
+});
+
+export { gettAllCommunity, createCommunity, commynityBySlug };
