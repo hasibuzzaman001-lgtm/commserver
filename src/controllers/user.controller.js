@@ -524,16 +524,91 @@ const getMyProfile = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "posts",
-        localField: "_id",
-        foreignField: "owner",
+        let: { userId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ["$owner", "$$userId"],
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $unwind: "$owner",
+          },
+        ],
         as: "posts",
       },
     },
     {
       $lookup: {
         from: "likes",
-        localField: "_id",
-        foreignField: "likedBy",
+        let: { userId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ["$likedBy", "$$userId"],
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: "posts",
+              let: { postId: "$post" },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$postId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "users",
+                    localField: "owner",
+                    foreignField: "_id",
+                    as: "owner",
+                    pipeline: [
+                      {
+                        $project: {
+                          fullName: 1,
+                          username: 1,
+                          avatar: 1,
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  $unwind: "$owner",
+                },
+              ],
+              as: "post",
+            },
+          },
+          {
+            $unwind: "$post",
+          },
+        ],
         as: "likes",
       },
     },
