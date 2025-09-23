@@ -361,14 +361,14 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Cover image updated successfully"));
 });
 
-const getUserChannelProfile = asyncHandler(async (req, res) => {
+const getUserProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
 
   if (!username?.trim()) {
     throw new ApiError(400, "username is missing");
   }
 
-  const channel = await User.aggregate([
+  const profile = await User.aggregate([
     {
       $match: {
         username: username?.toLowerCase(),
@@ -376,31 +376,42 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
     {
       $lookup: {
-        from: "subscriptions",
+        from: "follows",
         localField: "_id",
-        foreignField: "channel",
-        as: "subscribers",
+        foreignField: "following",
+        as: "followers",
       },
     },
     {
       $lookup: {
-        from: "subscriptions",
+        from: "posts",
         localField: "_id",
-        foreignField: "subscriber",
-        as: "subscribedTo",
+        foreignField: "owner",
+        as: "posts",
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "follower",
+        as: "following",
       },
     },
     {
       $addFields: {
-        subscribersCount: {
-          $size: "$subscribers",
+        followersCount: {
+          $size: "$followers",
         },
-        channelsSubscribedToCount: {
-          $size: "$subscribedTo",
+        followingCount: {
+          $size: "$following",
         },
-        isSubscribed: {
+        postsCount: {
+          $size: "$posts",
+        },
+        isFollowing: {
           $cond: {
-            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            if: { $in: [req.user?._id, "$followers.following"] },
             then: true,
             else: false,
           },
@@ -411,24 +422,25 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       $project: {
         fullName: 1,
         username: 1,
-        subscribersCount: 1,
-        channelsSubscribedToCount: 1,
-        isSubscribed: 1,
+        followersCount: 1,
+        followingCount: 1,
+        isFollowing: 1,
         avatar: 1,
+        postsCount: 1,
         coverImage: 1,
         email: 1,
       },
     },
   ]);
 
-  if (!channel?.length) {
+  if (!profile?.length) {
     throw new ApiError(404, "channel does not exists");
   }
 
   return res
     .status(200)
     .json(
-      new ApiResponse(200, channel[0], "User channel fetched successfully")
+      new ApiResponse(200, profile[0], "User channel fetched successfully")
     );
 });
 
@@ -486,6 +498,79 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     );
 });
 
+const getMyProfile = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "following",
+        as: "followers",
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "follower",
+        as: "following",
+      },
+    },
+    {
+      $lookup: {
+        from: "posts",
+        localField: "_id",
+        foreignField: "owner",
+        as: "posts",
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "likedBy",
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        followersCount: {
+          $size: "$followers",
+        },
+        followingCount: {
+          $size: "$following",
+        },
+        postsCount: {
+          $size: "$posts",
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        followersCount: 1,
+        followingCount: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1,
+        posts: 1,
+        postsCount: 1,
+        likes: 1,
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user[0], "My profile fetched successfully"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -496,6 +581,7 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
-  getUserChannelProfile,
+  getUserProfile,
   getWatchHistory,
+  getMyProfile,
 };
