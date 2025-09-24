@@ -8,6 +8,7 @@ import { MediumScraper } from "./platforms/MediumScraper.js";
 import { ScrapingUtils } from "./utils/ScrapingUtils.js";
 import { ContentProcessor } from "./utils/ContentProcessor.js";
 import { ContentValidator } from "./utils/ContentValidator.js";
+import { CommentGeneratorService } from "../services/CommentGeneratorService.js";
 
 class ScraperManager {
   constructor() {
@@ -20,6 +21,7 @@ class ScraperManager {
     this.utils = new ScrapingUtils();
     this.contentProcessor = new ContentProcessor();
     this.contentValidator = new ContentValidator();
+    this.commentGenerator = new CommentGeneratorService();
   }
 
   /**
@@ -180,12 +182,11 @@ class ScraperManager {
             platformUsers
           );
 
-          // Scrape and create comments for the posts
-          if (postsCreated > 0 && scrapedContent.length > 0) {
-            await this.scrapeAndCreateComments(
-              scrapedContent[0],
-              platformConfig.platform,
-              platformUsers
+          // Generate AI comments for created posts
+          if (postsCreated > 0) {
+            await this.generateCommentsForCreatedPosts(
+              scrapedContent.slice(0, postsCreated),
+              platformConfig.platform
             );
           }
 
@@ -284,12 +285,11 @@ class ScraperManager {
             platformUsers
           );
 
-          // Scrape and create comments for each post
-          for (const content of scrapedContent.slice(0, postsCreated)) {
-            await this.scrapeAndCreateComments(
-              content,
-              platformConfig.platform,
-              platformUsers
+          // Generate AI comments for created posts
+          if (postsCreated > 0) {
+            await this.generateCommentsForCreatedPosts(
+              scrapedContent.slice(0, postsCreated),
+              platformConfig.platform
             );
           }
 
@@ -332,73 +332,52 @@ class ScraperManager {
   }
 
   /**
-   * Scrape and create comments for a post
+   * Generate AI comments for created posts
    */
-  async scrapeAndCreateComments(postContent, platform, platformUsers) {
+  async generateCommentsForCreatedPosts(scrapedContent, platform) {
     try {
-      const scraper = this.scrapers[platform];
-      if (!scraper.scrapePostComments) {
-        console.log(`Comment scraping not implemented for ${platform}`);
+      if (!process.env.OPENAI_API_KEY) {
+        console.log(
+          "OpenAI API key not configured, skipping comment generation"
+        );
         return;
       }
 
-      // Find the created post in database
-      const post = await Post.findOne({
-        platform: platform,
-        originalId: postContent.id,
-      });
-
-      if (!post) {
-        console.log(`Post not found for comment scraping: ${postContent.id}`);
-        return;
-      }
-
-      // Scrape comments
-      const comments = await scraper.scrapePostComments(postContent.id, 5); // Max 5 comments
-
-      if (comments.length === 0) {
-        console.log(`No comments found for post: ${postContent.id}`);
-        return;
-      }
-
-      // Create comments in database
-      for (const commentData of comments) {
+      for (const content of scrapedContent) {
         try {
-          // Check if comment already exists
-          const existingComment = await Comment.findOne({
-            post: post._id,
-            content: commentData.content,
+          // Find the created post
+          const post = await Post.findOne({
+            platform: platform,
+            originalId: content.id,
           });
 
-          if (existingComment) {
-            continue; // Skip duplicate comments
+          if (!post) {
+            console.log(`Post not found for comment generation: ${content.id}`);
+            continue;
           }
 
-          // Assign random platform user
-          const randomUser =
-            platformUsers[Math.floor(Math.random() * platformUsers.length)];
-
-          await Comment.create({
-            content: commentData.content.substring(0, 1000), // Limit length
-            post: post._id,
-            owner: randomUser._id,
-            likes: commentData.likes || 0,
-          });
-
-          // Update post comment count
-          await Post.findByIdAndUpdate(post._id, {
-            $inc: { "localEngagement.comments": 1 },
-          });
+          // Generate 10-15 AI comments for this post
+          const commentCount = Math.floor(Math.random() * 6) + 10; // 10-15 comments
+          await this.commentGenerator.generateCommentsForPost(
+            post._id,
+            commentCount
+          );
 
           console.log(
-            `✅ Created comment for post: ${post.title.substring(0, 30)}...`
+            `✅ Generated AI comments for post: ${post.title.substring(0, 30)}...`
           );
-        } catch (commentError) {
-          console.error(`Error creating comment:`, commentError.message);
+
+          // Add delay to avoid overwhelming the API
+          await this.utils.delay(2000);
+        } catch (error) {
+          console.error(
+            `Error generating comments for post ${content.id}:`,
+            error.message
+          );
         }
       }
     } catch (error) {
-      console.error(`Error scraping comments for ${platform}:`, error.message);
+      console.error(`Error in comment generation process:`, error.message);
     }
   }
 
@@ -465,6 +444,14 @@ class ScraperManager {
             platformConfig.platform,
             platformUsers
           );
+
+          // Generate AI comments for created posts
+          if (postsCreated > 0) {
+            await this.generateCommentsForCreatedPosts(
+              authenticContent.slice(0, postsCreated),
+              platformConfig.platform
+            );
+          }
 
           totalPostsCreated += postsCreated;
           platformResults.push({
@@ -604,7 +591,7 @@ class ScraperManager {
           owner: randomUser._id,
           engagementMetrics: {
             likes: content.likes || 0,
-            comments: content.comments || 0,
+            comments: 0, // Remove original comment count
             shares: content.shares || 0,
             views: content.views || 0,
           },
@@ -695,7 +682,7 @@ class ScraperManager {
           owner: randomUser._id,
           engagementMetrics: {
             likes: content.likes || 0,
-            comments: content.comments || 0,
+            comments: 0, // Remove original comment count
             shares: content.shares || 0,
             views: content.views || 0,
           },

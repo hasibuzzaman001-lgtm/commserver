@@ -54,11 +54,11 @@ class LinkedInScraper {
   getRealisticLinkedInData(maxPosts, keywords) {
     const posts = [];
     const professionalTopics = [
-      "Just completed a successful product launch. Key lesson: customer feedback is everything.",
-      "Remote team management tip: Regular 1-on-1s make all the difference.",
-      "After 5 years in sales, here's what I've learned about building client relationships.",
-      "The best business strategy? Listen to your customers and adapt quickly.",
-      "Leadership isn't about having all the answers. It's about asking the right questions.",
+      "Reflecting on our recent product launch and the valuable lessons learned from customer feedback throughout the process.",
+      "Sharing insights on effective remote team management strategies that have transformed our workflow and productivity.",
+      "Five years in sales has taught me invaluable lessons about authentic relationship building with clients.",
+      "The most successful business strategies I've observed focus on genuine customer understanding and rapid adaptation.",
+      "True leadership emerges from curiosity and the courage to ask difficult questions rather than pretending to know everything.",
     ];
 
     for (let i = 0; i < Math.min(maxPosts, 5); i++) {
@@ -69,13 +69,13 @@ class LinkedInScraper {
 
       const post = {
         id: `linkedin_${Date.now()}_${i}`,
-        title: topic.split(":")[0],
+        title: topic.split(".")[0] + ".",
         content: topic,
         url: `https://linkedin.com/posts/business-leader-${i}_${topic.replace(/\s+/g, "-").toLowerCase()}-activity-${Date.now()}${i}`,
         author: `Business Leader ${(i % 8) + 1}`,
         createdAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // Last day
         likes: Math.floor(Math.random() * 50) + 10,
-        comments: Math.floor(Math.random() * 10) + 2,
+        comments: 0, // Remove original comment count
         shares: Math.floor(Math.random() * 5) + 1,
         views: Math.floor(Math.random() * 500) + 50,
         thumbnail: null,
