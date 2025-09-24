@@ -337,9 +337,13 @@ class ScraperManager {
   async generateCommentsForCreatedPosts(scrapedContent, platform) {
     try {
       if (!process.env.OPENAI_API_KEY) {
+<<<<<<< HEAD
         console.log(
           "OpenAI API key not configured, skipping comment generation"
         );
+=======
+        console.log('OpenAI API key not configured, skipping comment generation');
+>>>>>>> 8631fb474849bfe30d9255aaa1200f3e9577988c
         return;
       }
 
@@ -358,6 +362,7 @@ class ScraperManager {
 
           // Generate 10-15 AI comments for this post
           const commentCount = Math.floor(Math.random() * 6) + 10; // 10-15 comments
+<<<<<<< HEAD
           await this.commentGenerator.generateCommentsForPost(
             post._id,
             commentCount
@@ -374,6 +379,16 @@ class ScraperManager {
             `Error generating comments for post ${content.id}:`,
             error.message
           );
+=======
+          await this.commentGenerator.generateCommentsForPost(post._id, commentCount);
+          
+          console.log(`✅ Generated AI comments for post: ${post.title.substring(0, 30)}...`);
+          
+          // Add delay to avoid overwhelming the API
+          await this.utils.delay(2000);
+        } catch (error) {
+          console.error(`Error generating comments for post ${content.id}:`, error.message);
+>>>>>>> 8631fb474849bfe30d9255aaa1200f3e9577988c
         }
       }
     } catch (error) {

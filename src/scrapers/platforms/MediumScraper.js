@@ -118,7 +118,7 @@ class MediumScraper {
         views: Math.floor(Math.random() * 5000) + 500,
         thumbnail: `https://picsum.photos/800/400?random=${i}`,
         mediaUrls: [
-          {
+        comments: 0, // Remove original comment count
             type: "image",
             url: `https://picsum.photos/800/400?random=${i}`,
           },
