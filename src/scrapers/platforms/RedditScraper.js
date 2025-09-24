@@ -157,15 +157,19 @@ class RedditScraper {
    * Transform Reddit post data to our standard format
    */
   transformRedditPost(redditPost) {
+    // Generate more dynamic, unique content
+    const dynamicTitle = this.enhanceTitle(redditPost.title);
+    const dynamicContent = this.enhanceContent(redditPost.selftext || redditPost.title, redditPost);
+
     return {
       id: redditPost.id,
-      title: redditPost.title,
-      content: redditPost.selftext || redditPost.title,
+      title: dynamicTitle,
+      content: dynamicContent,
       url: `${this.baseUrl}${redditPost.permalink}`,
       author: redditPost.author,
       createdAt: new Date(redditPost.created_utc * 1000),
       likes: redditPost.ups || 0,
-      comments: redditPost.num_comments || 0,
+      comments: 0, // Remove original comment count
       shares: redditPost.num_crossposts || 0,
       views: 0, // Reddit doesn't provide view counts
       thumbnail: this.extractThumbnail(redditPost),
@@ -178,6 +182,90 @@ class RedditScraper {
     };
   }
 
+  /**
+   * Enhance title to make it more unique and engaging
+   */
+  enhanceTitle(originalTitle) {
+    if (!originalTitle) return "Discussion Post";
+    
+    // Remove common Reddit prefixes that make posts look similar
+    let enhanced = originalTitle
+      .replace(/^(PSA:|LPT:|TIL:|DAE:|TIFU:|AMA:?)\s*/i, '')
+      .replace(/^\[.*?\]\s*/, '') // Remove bracketed prefixes
+      .trim();
+
+    // Ensure title is not empty after cleaning
+    if (!enhanced) {
+      enhanced = originalTitle;
+    }
+
+    return enhanced;
+  }
+
+  /**
+   * Enhance content to be more dynamic and unique
+   */
+  enhanceContent(originalContent, postData) {
+    if (!originalContent || originalContent.trim() === '') {
+      // Create content from title and context if no selftext
+      return this.generateContentFromContext(postData);
+    }
+
+    // Clean up the content
+    let enhanced = originalContent
+      .replace(/Edit:.*$/gim, '') // Remove edit notes
+      .replace(/Update:.*$/gim, '') // Remove update notes
+      .replace(/TL;DR:.*$/gim, '') // Remove TL;DR
+      .replace(/^\s*EDIT\s*:.*$/gim, '') // Remove EDIT lines
+      .trim();
+
+    // If content is too short, enhance it
+    if (enhanced.length < 50) {
+      enhanced = this.expandShortContent(enhanced, postData);
+    }
+
+    return enhanced || originalContent;
+  }
+
+  /**
+   * Generate content from post context when selftext is empty
+   */
+  generateContentFromContext(postData) {
+    const subreddit = postData.subreddit;
+    const title = postData.title;
+    
+    // Create contextual content based on subreddit and title
+    const contextualPhrases = {
+      'entrepreneur': 'Looking for insights and experiences from fellow entrepreneurs.',
+      'business': 'Seeking advice and perspectives from the business community.',
+      'startups': 'Would love to hear thoughts from other startup founders.',
+      'smallbusiness': 'Any other small business owners have similar experiences?',
+      'marketing': 'Interested in hearing different marketing approaches to this.',
+      'investing': 'What are your thoughts on this from an investment perspective?'
+    };
+
+    const defaultPhrase = 'What are your thoughts and experiences with this?';
+    const contextPhrase = contextualPhrases[subreddit.toLowerCase()] || defaultPhrase;
+    
+    return `${title}\n\n${contextPhrase}`;
+  }
+
+  /**
+   * Expand short content to make it more substantial
+   */
+  expandShortContent(content, postData) {
+    if (content.length >= 50) return content;
+    
+    const expansions = [
+      'I\'ve been thinking about this lately and wanted to get the community\'s perspective.',
+      'This has been on my mind and I\'d love to hear different viewpoints.',
+      'I\'m curious about others\' experiences with this topic.',
+      'Looking for insights from people who might have dealt with something similar.'
+    ];
+    
+    const randomExpansion = expansions[Math.floor(Math.random() * expansions.length)];
+    return `${content}\n\n${randomExpansion}`;
+  }
   /**
    * Extract subreddit name from URL
    */

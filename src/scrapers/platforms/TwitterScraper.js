@@ -212,7 +212,7 @@ class TwitterScraper {
         author: author?.username || "unknown",
         createdAt: new Date(tweet.created_at),
         likes: tweet.public_metrics?.like_count || 0,
-        comments: tweet.public_metrics?.reply_count || 0,
+        comments: 0, // Remove original comment count
         shares: tweet.public_metrics?.retweet_count || 0,
         views: tweet.public_metrics?.impression_count || 0,
         thumbnail: author?.profile_image_url,
