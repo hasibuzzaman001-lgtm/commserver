@@ -159,14 +159,10 @@ class RedditScraper {
   transformRedditPost(redditPost) {
     // Generate more dynamic, unique content
     const dynamicTitle = this.enhanceTitle(redditPost.title);
-<<<<<<< HEAD
     const dynamicContent = this.enhanceContent(
       redditPost.selftext || redditPost.title,
       redditPost
     );
-=======
-    const dynamicContent = this.enhanceContent(redditPost.selftext || redditPost.title, redditPost);
->>>>>>> 8631fb474849bfe30d9255aaa1200f3e9577988c
 
     return {
       id: redditPost.id,
@@ -194,19 +190,11 @@ class RedditScraper {
    */
   enhanceTitle(originalTitle) {
     if (!originalTitle) return "Discussion Post";
-<<<<<<< HEAD
 
     // Remove common Reddit prefixes that make posts look similar
     let enhanced = originalTitle
       .replace(/^(PSA:|LPT:|TIL:|DAE:|TIFU:|AMA:?)\s*/i, "")
       .replace(/^\[.*?\]\s*/, "") // Remove bracketed prefixes
-=======
-    
-    // Remove common Reddit prefixes that make posts look similar
-    let enhanced = originalTitle
-      .replace(/^(PSA:|LPT:|TIL:|DAE:|TIFU:|AMA:?)\s*/i, '')
-      .replace(/^\[.*?\]\s*/, '') // Remove bracketed prefixes
->>>>>>> 8631fb474849bfe30d9255aaa1200f3e9577988c
       .trim();
 
     // Ensure title is not empty after cleaning
@@ -221,28 +209,17 @@ class RedditScraper {
    * Enhance content to be more dynamic and unique
    */
   enhanceContent(originalContent, postData) {
-<<<<<<< HEAD
     if (!originalContent || originalContent.trim() === "") {
-=======
-    if (!originalContent || originalContent.trim() === '') {
->>>>>>> 8631fb474849bfe30d9255aaa1200f3e9577988c
       // Create content from title and context if no selftext
       return this.generateContentFromContext(postData);
     }
 
     // Clean up the content
     let enhanced = originalContent
-<<<<<<< HEAD
       .replace(/Edit:.*$/gim, "") // Remove edit notes
       .replace(/Update:.*$/gim, "") // Remove update notes
       .replace(/TL;DR:.*$/gim, "") // Remove TL;DR
       .replace(/^\s*EDIT\s*:.*$/gim, "") // Remove EDIT lines
-=======
-      .replace(/Edit:.*$/gim, '') // Remove edit notes
-      .replace(/Update:.*$/gim, '') // Remove update notes
-      .replace(/TL;DR:.*$/gim, '') // Remove TL;DR
-      .replace(/^\s*EDIT\s*:.*$/gim, '') // Remove EDIT lines
->>>>>>> 8631fb474849bfe30d9255aaa1200f3e9577988c
       .trim();
 
     // If content is too short, enhance it
@@ -259,7 +236,6 @@ class RedditScraper {
   generateContentFromContext(postData) {
     const subreddit = postData.subreddit;
     const title = postData.title;
-<<<<<<< HEAD
 
     // Create contextual content based on subreddit and title
     const contextualPhrases = {
@@ -279,22 +255,6 @@ class RedditScraper {
     const contextPhrase =
       contextualPhrases[subreddit.toLowerCase()] || defaultPhrase;
 
-=======
-    
-    // Create contextual content based on subreddit and title
-    const contextualPhrases = {
-      'entrepreneur': 'Looking for insights and experiences from fellow entrepreneurs.',
-      'business': 'Seeking advice and perspectives from the business community.',
-      'startups': 'Would love to hear thoughts from other startup founders.',
-      'smallbusiness': 'Any other small business owners have similar experiences?',
-      'marketing': 'Interested in hearing different marketing approaches to this.',
-      'investing': 'What are your thoughts on this from an investment perspective?'
-    };
-
-    const defaultPhrase = 'What are your thoughts and experiences with this?';
-    const contextPhrase = contextualPhrases[subreddit.toLowerCase()] || defaultPhrase;
-    
->>>>>>> 8631fb474849bfe30d9255aaa1200f3e9577988c
     return `${title}\n\n${contextPhrase}`;
   }
 
@@ -303,7 +263,6 @@ class RedditScraper {
    */
   expandShortContent(content, postData) {
     if (content.length >= 50) return content;
-<<<<<<< HEAD
 
     const expansions = [
       "I've been thinking about this lately and wanted to get the community's perspective.",
@@ -314,17 +273,6 @@ class RedditScraper {
 
     const randomExpansion =
       expansions[Math.floor(Math.random() * expansions.length)];
-=======
-    
-    const expansions = [
-      'I\'ve been thinking about this lately and wanted to get the community\'s perspective.',
-      'This has been on my mind and I\'d love to hear different viewpoints.',
-      'I\'m curious about others\' experiences with this topic.',
-      'Looking for insights from people who might have dealt with something similar.'
-    ];
-    
-    const randomExpansion = expansions[Math.floor(Math.random() * expansions.length)];
->>>>>>> 8631fb474849bfe30d9255aaa1200f3e9577988c
     return `${content}\n\n${randomExpansion}`;
   }
   /**
