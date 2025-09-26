@@ -1,9 +1,9 @@
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 class OpenAIService {
   constructor() {
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: !process.env.OPENAI_API_KEY,
     });
     this.rateLimitDelay = 1000; // 1 second between requests
     this.lastRequestTime = 0;
@@ -16,19 +16,24 @@ class OpenAIService {
     try {
       await this.enforceRateLimit();
 
-      const prompt = this.buildCommentPrompt(postTitle, postContent, commentCount);
-      
+      const prompt = this.buildCommentPrompt(
+        postTitle,
+        postContent,
+        commentCount
+      );
+
       const response = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that generates realistic, diverse comments for social media posts. Generate comments that feel authentic and varied in tone, length, and perspective."
+            content:
+              "You are a helpful assistant that generates realistic, diverse comments for social media posts. Generate comments that feel authentic and varied in tone, length, and perspective.",
           },
           {
             role: "user",
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         max_tokens: 800,
         temperature: 0.8,
@@ -38,13 +43,13 @@ class OpenAIService {
 
       const generatedText = response.choices[0]?.message?.content;
       if (!generatedText) {
-        throw new Error('No content generated from OpenAI');
+        throw new Error("No content generated from OpenAI");
       }
 
       return this.parseComments(generatedText);
     } catch (error) {
-      console.error('Error generating comments with OpenAI:', error.message);
-      
+      console.error("Error generating comments with OpenAI:", error.message);
+
       // Fallback to basic comments if OpenAI fails
       return this.generateFallbackComments(commentCount);
     }
@@ -55,8 +60,9 @@ class OpenAIService {
    */
   buildCommentPrompt(title, content, count) {
     // Truncate content to save tokens
-    const truncatedContent = content.length > 300 ? content.substring(0, 300) + '...' : content;
-    
+    const truncatedContent =
+      content.length > 300 ? content.substring(0, 300) + "..." : content;
+
     return `Generate ${count} realistic, diverse comments for this post:
 
 Title: "${title}"
@@ -78,8 +84,8 @@ Generate ${count} comments:`;
    */
   parseComments(generatedText) {
     const comments = [];
-    const lines = generatedText.split('\n').filter(line => line.trim());
-    
+    const lines = generatedText.split("\n").filter((line) => line.trim());
+
     for (const line of lines) {
       // Match numbered list format: "1. Comment text" or "1) Comment text"
       const match = line.match(/^\d+[\.\)]\s*(.+)$/);
@@ -90,7 +96,7 @@ Generate ${count} comments:`;
         }
       }
     }
-    
+
     return comments.slice(0, 15); // Limit to max 15 comments
   }
 
@@ -113,9 +119,9 @@ Generate ${count} comments:`;
       "This is exactly what I needed to read.",
       "Well said!",
       "Thanks for the reminder.",
-      "This resonates with me."
+      "This resonates with me.",
     ];
-    
+
     return fallbackComments
       .sort(() => 0.5 - Math.random())
       .slice(0, Math.min(count, fallbackComments.length));
@@ -127,12 +133,12 @@ Generate ${count} comments:`;
   async enforceRateLimit() {
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
-    
+
     if (timeSinceLastRequest < this.rateLimitDelay) {
       const waitTime = this.rateLimitDelay - timeSinceLastRequest;
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
-    
+
     this.lastRequestTime = Date.now();
   }
 
@@ -141,30 +147,35 @@ Generate ${count} comments:`;
    */
   async generateCommentsForPosts(posts) {
     const results = [];
-    
+
     for (const post of posts) {
       try {
         const comments = await this.generateComments(
-          post.title, 
-          post.content, 
+          post.title,
+          post.content,
           Math.floor(Math.random() * 6) + 10 // 10-15 comments
         );
-        
+
         results.push({
           postId: post._id,
-          comments: comments
+          comments: comments,
         });
-        
-        console.log(`Generated ${comments.length} comments for post: ${post.title.substring(0, 50)}...`);
+
+        console.log(
+          `Generated ${comments.length} comments for post: ${post.title.substring(0, 50)}...`
+        );
       } catch (error) {
-        console.error(`Failed to generate comments for post ${post._id}:`, error.message);
+        console.error(
+          `Failed to generate comments for post ${post._id}:`,
+          error.message
+        );
         results.push({
           postId: post._id,
-          comments: []
+          comments: [],
         });
       }
     }
-    
+
     return results;
   }
 }
