@@ -9,6 +9,7 @@ import { ScrapingUtils } from "./utils/ScrapingUtils.js";
 import { ContentProcessor } from "./utils/ContentProcessor.js";
 import { ContentValidator } from "./utils/ContentValidator.js";
 import { CommentGeneratorService } from "../services/CommentGeneratorService.js";
+import { autoLikeService } from "../services/AutoLikeService.js";
 
 class ScraperManager {
   constructor() {
@@ -615,6 +616,8 @@ class ScraperManager {
         console.log(
           `✅ Created authentic post: ${post.title.substring(0, 50)}...`
         );
+
+        await autoLikeService.assignInitialLikesToPost(post._id);
       } catch (postError) {
         console.error(
           `Error creating post from ${content.id}:`,
@@ -702,6 +705,8 @@ class ScraperManager {
 
         postsCreated++;
         console.log(`✅ Created post: ${post.title.substring(0, 50)}...`);
+
+        await autoLikeService.assignInitialLikesToPost(post._id);
       } catch (postError) {
         console.error(
           `Error creating post from ${content.id}:`,

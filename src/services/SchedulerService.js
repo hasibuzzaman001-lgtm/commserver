@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { ScraperManager } from "../scrapers/ScraperManager.js";
 import { Community } from "../models/community.model.js";
+import { autoLikeService } from "./AutoLikeService.js";
 
 class SchedulerService {
   constructor() {
@@ -29,6 +30,9 @@ class SchedulerService {
 
       // Schedule stats update job (every 6 hours)
       this.scheduleStatsUpdateJob();
+
+      // Schedule auto-like increment job (every 5 minutes)
+      this.scheduleAutoLikeJob();
 
       this.isInitialized = true;
       console.log("✅ Scheduler service initialized successfully");
@@ -105,6 +109,41 @@ class SchedulerService {
    */
   scheduleCleanupJob() {
     console.log("📅 Cleanup job scheduling disabled as requested");
+  }
+
+  /**
+   * Schedule auto-like increment job (every 5 minutes)
+   */
+  scheduleAutoLikeJob() {
+    const jobId = "auto_like_increment";
+
+    if (this.jobs.has(jobId)) {
+      this.jobs.get(jobId).stop();
+      this.jobs.delete(jobId);
+    }
+
+    const job = cron.schedule(
+      "*/5 * * * *",
+      async () => {
+        console.log("❤️ Starting auto-like increment job...");
+
+        try {
+          const result = await autoLikeService.incrementLikesForRecentPosts();
+          console.log(
+            `✅ Auto-like increment completed: ${result.totalLikesAdded} likes added to ${result.postsUpdated} posts`
+          );
+        } catch (error) {
+          console.error("❌ Auto-like increment failed:", error.message);
+        }
+      },
+      {
+        scheduled: true,
+        timezone: "UTC",
+      }
+    );
+
+    this.jobs.set(jobId, job);
+    console.log("📅 Scheduled auto-like increment every 5 minutes");
   }
 
   /**
