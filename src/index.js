@@ -3,9 +3,7 @@ import connectDB from "./db/index.js";
 import { app } from "./app.js";
 import { schedulerService } from "./services/SchedulerService.js";
 
-dotenv.config({
-  path: "./.env",
-});
+dotenv.config();
 const PORT = process.env.PORT || 8082;
 
 connectDB()
