@@ -9,6 +9,7 @@ import { ScrapingUtils } from "./utils/ScrapingUtils.js";
 import { ContentProcessor } from "./utils/ContentProcessor.js";
 import { ContentValidator } from "./utils/ContentValidator.js";
 import { CommentGeneratorService } from "../services/CommentGeneratorService.js";
+import { autoLikeService } from "../services/AutoLikeService.js";
 
 class ScraperManager {
   constructor() {
@@ -581,6 +582,8 @@ class ScraperManager {
           this.contentProcessor.processAuthenticContent(content);
 
         // Create the post with enhanced metadata
+        const randomLikeCount = Math.floor(Math.random() * 11) + 5;
+
         const post = await Post.create({
           title: processedContent.title,
           content: processedContent.content,
@@ -590,7 +593,7 @@ class ScraperManager {
           community: community._id,
           owner: randomUser._id,
           engagementMetrics: {
-            likes: content.likes || 0,
+            likes: randomLikeCount || 0,
             comments: 0, // Remove original comment count
             shares: content.shares || 0,
             views: content.views || 0,
@@ -615,6 +618,8 @@ class ScraperManager {
         console.log(
           `✅ Created authentic post: ${post.title.substring(0, 50)}...`
         );
+
+        await autoLikeService.assignInitialLikesToPost(post._id);
       } catch (postError) {
         console.error(
           `Error creating post from ${content.id}:`,
@@ -670,7 +675,7 @@ class ScraperManager {
 
         // Process and clean content
         const processedContent = this.contentProcessor.processContent(content);
-
+        const randomLikeCount = Math.floor(Math.random() * 11) + 5;
         // Create the post
         const post = await Post.create({
           title: processedContent.title,
@@ -681,7 +686,7 @@ class ScraperManager {
           community: community._id,
           owner: randomUser._id,
           engagementMetrics: {
-            likes: content.likes || 0,
+            likes: randomLikeCount || 0,
             comments: 0, // Remove original comment count
             shares: content.shares || 0,
             views: content.views || 0,
@@ -702,6 +707,8 @@ class ScraperManager {
 
         postsCreated++;
         console.log(`✅ Created post: ${post.title.substring(0, 50)}...`);
+
+        await autoLikeService.assignInitialLikesToPost(post._id);
       } catch (postError) {
         console.error(
           `Error creating post from ${content.id}:`,

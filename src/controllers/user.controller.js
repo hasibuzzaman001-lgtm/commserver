@@ -443,6 +443,164 @@ const getUserProfile = asyncHandler(async (req, res) => {
       new ApiResponse(200, profile[0], "User channel fetched successfully")
     );
 });
+const getUserProfileById = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId?.trim()) {
+    throw new ApiError(400, "userId is missing");
+  }
+
+  const profile = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "following",
+        as: "followers",
+      },
+    },
+    {
+      $lookup: {
+        from: "follows",
+        localField: "_id",
+        foreignField: "follower",
+        as: "following",
+      },
+    },
+    {
+      $lookup: {
+        from: "posts",
+        let: { userId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ["$owner", "$$userId"],
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $unwind: "$owner",
+          },
+        ],
+        as: "posts",
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        let: { userId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ["$likedBy", "$$userId"],
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: "posts",
+              let: { postId: "$post" },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$_id", "$$postId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "users",
+                    localField: "owner",
+                    foreignField: "_id",
+                    as: "owner",
+                    pipeline: [
+                      {
+                        $project: {
+                          fullName: 1,
+                          username: 1,
+                          avatar: 1,
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  $unwind: "$owner",
+                },
+              ],
+              as: "post",
+            },
+          },
+          {
+            $unwind: "$post",
+          },
+        ],
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        followersCount: {
+          $size: "$followers",
+        },
+        followingCount: {
+          $size: "$following",
+        },
+        postsCount: {
+          $size: "$posts",
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        followersCount: 1,
+        followingCount: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1,
+        posts: 1,
+        postsCount: 1,
+        likes: 1,
+      },
+    },
+  ]);
+  if (!profile?.length) {
+    throw new ApiError(404, "channel does not exists");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, profile[0], "User channel fetched successfully")
+    );
+});
 
 const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
@@ -659,4 +817,5 @@ export {
   getUserProfile,
   getWatchHistory,
   getMyProfile,
+  getUserProfileById,
 };
