@@ -33,8 +33,11 @@ const getAllPosts = asyncHandler(async (req, res) => {
     matchConditions["scrapingMetadata.isAuthentic"] = true;
   }
 
-  if (community && isValidObjectId(community)) {
-    matchConditions.community = new mongoose.Types.ObjectId(community);
+  let communityId = null;
+
+  if (community) {
+    const communityDoc = await Community.findOne({ slug: community });
+    communityId = communityDoc ? communityDoc._id : null;
   }
 
   if (platform) {
@@ -58,6 +61,13 @@ const getAllPosts = asyncHandler(async (req, res) => {
           { content: { $regex: search, $options: "i" } },
           { "scrapingMetadata.tags": { $in: [new RegExp(search, "i")] } },
         ],
+      },
+    });
+  }
+  if (communityId) {
+    pipeline.push({
+      $match: {
+        community: communityId,
       },
     });
   }
