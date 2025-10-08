@@ -14,12 +14,6 @@ const communitiesData = [
         keywords: ["startup", "business", "entrepreneur", "funding", "growth"],
         isActive: true,
       },
-      {
-        platform: "twitter",
-        sourceUrl: "https://twitter.com/search?q=entrepreneur",
-        keywords: ["entrepreneur", "startup", "business", "founder"],
-        isActive: true,
-      },
     ],
     scrapingConfig: {
       frequency: "daily",
@@ -38,12 +32,6 @@ const communitiesData = [
         platform: "reddit",
         sourceUrl: "https://www.reddit.com/r/startups",
         keywords: ["startup", "mvp", "funding", "venture capital", "seed"],
-        isActive: true,
-      },
-      {
-        platform: "medium",
-        sourceUrl: "https://medium.com/topic/startup",
-        keywords: ["startup", "entrepreneurship", "venture", "scaling"],
         isActive: true,
       },
     ],
@@ -71,12 +59,6 @@ const communitiesData = [
         ],
         isActive: true,
       },
-      {
-        platform: "linkedin",
-        sourceUrl: "https://linkedin.com/company/small-business",
-        keywords: ["small business", "local", "community", "growth"],
-        isActive: true,
-      },
     ],
     scrapingConfig: {
       frequency: "daily",
@@ -92,20 +74,9 @@ const communitiesData = [
     category: "business-general",
     scrapingPlatforms: [
       {
-        platform: "linkedin",
-        sourceUrl: "https://linkedin.com/company/business-strategy",
+        platform: "reddit",
+        sourceUrl: "https://www.reddit.com/r/business",
         keywords: ["strategy", "business", "market", "analysis", "corporate"],
-        isActive: true,
-      },
-      {
-        platform: "medium",
-        sourceUrl: "https://medium.com/topic/business",
-        keywords: [
-          "business strategy",
-          "corporate",
-          "management",
-          "leadership",
-        ],
         isActive: true,
       },
     ],
@@ -134,12 +105,6 @@ const communitiesData = [
         ],
         isActive: true,
       },
-      {
-        platform: "twitter",
-        sourceUrl: "https://twitter.com/search?q=marketing",
-        keywords: ["marketing", "digital", "seo", "content", "social"],
-        isActive: true,
-      },
     ],
     scrapingConfig: {
       frequency: "daily",
@@ -166,12 +131,6 @@ const communitiesData = [
         ],
         isActive: true,
       },
-      {
-        platform: "twitter",
-        sourceUrl: "https://twitter.com/search?q=saas",
-        keywords: ["saas", "software", "subscription", "mrr", "arr"],
-        isActive: true,
-      },
     ],
     scrapingConfig: {
       frequency: "daily",
@@ -192,17 +151,6 @@ const communitiesData = [
         keywords: ["ecommerce", "online store", "shopify", "amazon", "retail"],
         isActive: true,
       },
-      {
-        platform: "medium",
-        sourceUrl: "https://medium.com/topic/ecommerce",
-        keywords: [
-          "ecommerce",
-          "online retail",
-          "digital commerce",
-          "marketplace",
-        ],
-        isActive: true,
-      },
     ],
     scrapingConfig: {
       frequency: "daily",
@@ -221,12 +169,6 @@ const communitiesData = [
         platform: "reddit",
         sourceUrl: "https://www.reddit.com/r/sales",
         keywords: ["sales", "selling", "crm", "leads", "conversion"],
-        isActive: true,
-      },
-      {
-        platform: "linkedin",
-        sourceUrl: "https://linkedin.com/company/sales",
-        keywords: ["sales", "b2b", "selling", "revenue", "customers"],
         isActive: true,
       },
     ],
@@ -255,12 +197,6 @@ const communitiesData = [
         ],
         isActive: true,
       },
-      {
-        platform: "medium",
-        sourceUrl: "https://medium.com/topic/personal-finance",
-        keywords: ["finance", "investing", "money", "wealth", "financial"],
-        isActive: true,
-      },
     ],
     scrapingConfig: {
       frequency: "daily",
@@ -287,17 +223,51 @@ const communitiesData = [
         ],
         isActive: true,
       },
+    ],
+    scrapingConfig: {
+      frequency: "daily",
+      maxPostsPerScrape: 15,
+      qualityThreshold: 0.5,
+    },
+  },
+  {
+    name: "Entrepreneurial Ride",
+    slug: "entrepreneurial-ride",
+    description:
+      "Stories, lessons, and experiences from the entrepreneurial journey.",
+    category: "entrepreneurial-ride",
+    scrapingPlatforms: [
       {
-        platform: "twitter",
-        sourceUrl: "https://twitter.com/search?q=business%20ideas",
-        keywords: ["business ideas", "opportunity", "innovation", "startup"],
+        platform: "reddit",
+        sourceUrl: "https://www.reddit.com/r/EntrepreneurRideAlong",
+        keywords: ["journey", "story", "experience", "lessons", "building"],
+        isActive: true,
+      },
+    ],
+    scrapingConfig: {
+      frequency: "daily",
+      maxPostsPerScrape: 20,
+      qualityThreshold: 0.6,
+    },
+  },
+  {
+    name: "Legal Business Advice",
+    slug: "legal-business-advice",
+    description:
+      "Legal advice and guidance for business owners and entrepreneurs.",
+    category: "law-advice",
+    scrapingPlatforms: [
+      {
+        platform: "reddit",
+        sourceUrl: "https://www.reddit.com/r/legaladvice",
+        keywords: ["business law", "contract", "legal", "compliance", "liability"],
         isActive: true,
       },
     ],
     scrapingConfig: {
       frequency: "daily",
       maxPostsPerScrape: 15,
-      qualityThreshold: 0.5,
+      qualityThreshold: 0.6,
     },
   },
 ];

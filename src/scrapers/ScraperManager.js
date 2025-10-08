@@ -2,9 +2,6 @@ import { Community } from "../models/community.model.js";
 import { Post } from "../models/post.model.js";
 import { User } from "../models/user.model.js";
 import { RedditScraper } from "./platforms/RedditScraper.js";
-import { TwitterScraper } from "./platforms/TwitterScraper.js";
-import { LinkedInScraper } from "./platforms/LinkedInScraper.js";
-import { MediumScraper } from "./platforms/MediumScraper.js";
 import { ScrapingUtils } from "./utils/ScrapingUtils.js";
 import { ContentProcessor } from "./utils/ContentProcessor.js";
 import { ContentValidator } from "./utils/ContentValidator.js";
@@ -15,14 +12,13 @@ class ScraperManager {
   constructor() {
     this.scrapers = {
       reddit: new RedditScraper(),
-      twitter: new TwitterScraper(),
-      linkedin: new LinkedInScraper(),
-      medium: new MediumScraper(),
     };
     this.utils = new ScrapingUtils();
     this.contentProcessor = new ContentProcessor();
     this.contentValidator = new ContentValidator();
     this.commentGenerator = new CommentGeneratorService();
+
+    console.log("✅ ScraperManager initialized with Reddit-only scraping");
   }
 
   /**
@@ -156,6 +152,13 @@ class ScraperManager {
       for (const platformConfig of community.scrapingPlatforms) {
         if (!platformConfig.isActive) continue;
 
+        if (platformConfig.platform !== "reddit") {
+          console.warn(
+            `⚠️ Skipping non-Reddit platform: ${platformConfig.platform} - Only Reddit scraping is enabled`
+          );
+          continue;
+        }
+
         try {
           const scraper = this.scrapers[platformConfig.platform];
           if (!scraper) {
@@ -258,6 +261,13 @@ class ScraperManager {
       // Scrape from each active platform
       for (const platformConfig of community.scrapingPlatforms) {
         if (!platformConfig.isActive) continue;
+
+        if (platformConfig.platform !== "reddit") {
+          console.warn(
+            `⚠️ Skipping non-Reddit platform: ${platformConfig.platform} - Only Reddit scraping is enabled`
+          );
+          continue;
+        }
 
         try {
           const scraper = this.scrapers[platformConfig.platform];
@@ -409,6 +419,13 @@ class ScraperManager {
       // Scrape from each active platform
       for (const platformConfig of community.scrapingPlatforms) {
         if (!platformConfig.isActive) continue;
+
+        if (platformConfig.platform !== "reddit") {
+          console.warn(
+            `⚠️ Skipping non-Reddit platform: ${platformConfig.platform} - Only Reddit scraping is enabled`
+          );
+          continue;
+        }
 
         try {
           const scraper = this.scrapers[platformConfig.platform];

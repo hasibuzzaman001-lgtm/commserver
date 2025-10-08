@@ -20,7 +20,7 @@ class RedditScraper {
     } = config;
 
     try {
-      console.log(`🔍 Scraping Reddit content: ${sourceUrl}`);
+      console.log(`🔍 Scraping AUTHENTIC Reddit content from: ${sourceUrl}`);
 
       const subreddit = this.extractSubreddit(sourceUrl);
       if (!subreddit) {
@@ -28,16 +28,19 @@ class RedditScraper {
       }
 
       // Fetch real posts from Reddit API
-      const posts = await this.fetchRedditPosts(subreddit, maxPosts);
+      const posts = await this.fetchRedditPosts(subreddit, maxPosts * 2);
+
+      // Filter out non-authentic content
+      const authenticPosts = posts.filter((post) => this.isAuthenticPost(post));
 
       // Filter by keywords if provided
       const filteredPosts =
         keywords.length > 0
-          ? posts.filter((post) => this.matchesKeywords(post, keywords))
-          : posts;
+          ? authenticPosts.filter((post) => this.matchesKeywords(post, keywords))
+          : authenticPosts;
 
       console.log(
-        `✅ Scraped ${filteredPosts.length} posts from r/${subreddit}`
+        `✅ Scraped ${filteredPosts.length} AUTHENTIC posts from r/${subreddit} (filtered from ${posts.length} total)`
       );
       return filteredPosts.slice(0, maxPosts);
     } catch (error) {
@@ -363,6 +366,53 @@ class RedditScraper {
     }
 
     return [...new Set(tags)]; // Remove duplicates
+  }
+
+  /**
+   * Check if post is authentic (not bot, spam, or promotional)
+   */
+  isAuthenticPost(post) {
+    if (!post || !post.author || !post.title) return false;
+
+    const author = post.author.toLowerCase();
+    const title = post.title.toLowerCase();
+    const content = (post.content || "").toLowerCase();
+    const fullText = `${title} ${content}`;
+
+    if (author === "[deleted]" || author === "automoderator") return false;
+    if (author.includes("bot") && !author.includes("robot")) return false;
+
+    const spamIndicators = [
+      "buy now",
+      "click here",
+      "limited time",
+      "act now",
+      "free money",
+      "guaranteed",
+      "make money fast",
+      "work from home",
+      "get rich quick",
+      "discount code",
+      "promo code",
+      "affiliate",
+      "sponsored",
+    ];
+
+    const hasSpam = spamIndicators.some((indicator) =>
+      fullText.includes(indicator)
+    );
+    if (hasSpam) return false;
+
+    if (title.length < 10 || title.length > 300) return false;
+
+    const exclamationCount = (fullText.match(/!/g) || []).length;
+    if (exclamationCount > 5) return false;
+
+    if (/(.)\1{4,}/.test(fullText)) return false;
+
+    if (post.score !== undefined && post.score < 0) return false;
+
+    return true;
   }
 
   /**
