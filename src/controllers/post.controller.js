@@ -23,12 +23,6 @@ const getAllPosts = asyncHandler(async (req, res) => {
   // Build match conditions
   const matchConditions = { status: "active" };
 
-  // Prioritize authentic content
-  if (req.query.authentic !== "false") {
-    matchConditions["scrapingMetadata.isAuthentic"] = true;
-  }
-
-  // Prioritize authentic content
   if (req.query.authentic !== "false") {
     matchConditions["scrapingMetadata.isAuthentic"] = true;
   }
@@ -53,13 +47,17 @@ const getAllPosts = asyncHandler(async (req, res) => {
   pipeline.push({ $match: matchConditions });
 
   // Add search functionality
-  if (search) {
+  const searchTerm = search?.toString().trim();
+  if (searchTerm) {
+    const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const searchRegex = new RegExp(escapedTerm, "i");
+
     pipeline.push({
       $match: {
         $or: [
-          { title: { $regex: search, $options: "i" } },
-          { content: { $regex: search, $options: "i" } },
-          { "scrapingMetadata.tags": { $in: [new RegExp(search, "i")] } },
+          { title: searchRegex },
+          { content: searchRegex },
+          { "scrapingMetadata.tags": searchRegex },
         ],
       },
     });
@@ -143,6 +141,173 @@ const getAllPosts = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, posts, "Posts fetched successfully"));
+});
+
+const createPost = asyncHandler(async (req, res) => {
+  const {
+    title,
+    content,
+    community,
+    platform,
+    sourceUrl,
+    originalId,
+    tags,
+    thumbnail,
+    mediaUrls,
+    status,
+    scrapingMetadata = {},
+  } = req.body;
+
+  if (!req.user?._id) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  const postingUser = await User.findById(req.user._id).select(
+    "username fullName avatar email"
+  );
+
+  if (!postingUser) {
+    throw new ApiError(401, "Invalid access token");
+  }
+
+  if (!title?.trim()) {
+    throw new ApiError(400, "Post title is required");
+  }
+
+  if (!content?.trim()) {
+    throw new ApiError(400, "Post content is required");
+  }
+
+  if (!community?.toString().trim()) {
+    throw new ApiError(400, "Community identifier is required");
+  }
+
+  const communityIdentifier = community.toString().trim();
+  let communityDoc = null;
+
+  if (isValidObjectId(communityIdentifier)) {
+    communityDoc = await Community.findById(communityIdentifier);
+  } else {
+    communityDoc = await Community.findOne({
+      slug: communityIdentifier.toLowerCase(),
+    });
+  }
+
+  if (!communityDoc) {
+    throw new ApiError(404, "Community not found");
+  }
+
+  const allowedPlatforms = ["reddit", "twitter", "linkedin", "medium"];
+  const resolvedPlatform = (platform || "linkedin").toLowerCase();
+
+  if (!allowedPlatforms.includes(resolvedPlatform)) {
+    throw new ApiError(
+      400,
+      `Invalid platform. Allowed values: ${allowedPlatforms.join(", ")}`
+    );
+  }
+
+  const manualId = new mongoose.Types.ObjectId().toString();
+  const resolvedOriginalId =
+    originalId?.toString().trim() || `manual_${manualId}`;
+  const resolvedSourceUrl =
+    sourceUrl?.toString().trim() ||
+    `manual://${resolvedPlatform}/${manualId}`;
+
+  const [existingBySource, existingByOriginal] = await Promise.all([
+    Post.findOne({ sourceUrl: resolvedSourceUrl }),
+    Post.findOne({
+      originalId: resolvedOriginalId,
+      platform: resolvedPlatform,
+    }),
+  ]);
+
+  if (existingBySource) {
+    throw new ApiError(409, "A post with this source already exists");
+  }
+
+  if (existingByOriginal) {
+    throw new ApiError(
+      409,
+      "A post with this identifier already exists on the selected platform"
+    );
+  }
+
+  const sanitizedTags = Array.isArray(tags)
+    ? tags.filter((tag) => typeof tag === "string" && tag.trim())
+    : null;
+
+  const metadataPayload = {
+    scrapedAt:
+      scrapingMetadata.scrapedAt && !isNaN(new Date(scrapingMetadata.scrapedAt))
+        ? new Date(scrapingMetadata.scrapedAt)
+        : new Date(),
+    originalAuthor:
+      scrapingMetadata.originalAuthor ||
+      postingUser.fullName ||
+      postingUser.username,
+    originalCreatedAt: scrapingMetadata.originalCreatedAt,
+    qualityScore:
+      typeof scrapingMetadata.qualityScore === "number"
+        ? scrapingMetadata.qualityScore
+        : 0.7,
+    authenticityScore:
+      typeof scrapingMetadata.authenticityScore === "number"
+        ? scrapingMetadata.authenticityScore
+        : 0.9,
+    tags: sanitizedTags && sanitizedTags.length > 0 ? sanitizedTags : undefined,
+    contentType: scrapingMetadata.contentType || "general",
+    isAuthentic:
+      typeof scrapingMetadata.isAuthentic === "boolean"
+        ? scrapingMetadata.isAuthentic
+        : true,
+    validationMethod:
+      scrapingMetadata.validationMethod || "manual-create-controller",
+    contentFingerprint: scrapingMetadata.contentFingerprint,
+  };
+
+  const postPayload = {
+    title: title.trim(),
+    content,
+    sourceUrl: resolvedSourceUrl,
+    platform: resolvedPlatform,
+    originalId: resolvedOriginalId,
+    community: communityDoc._id,
+    owner: req.user._id,
+    status: status && ["active", "hidden", "flagged", "deleted"].includes(status)
+      ? status
+      : "active",
+    thumbnail: thumbnail?.toString().trim() || undefined,
+    scrapingMetadata: metadataPayload,
+  };
+
+  if (mediaUrls) {
+    postPayload.mediaUrls = Array.isArray(mediaUrls)
+      ? mediaUrls
+      : [mediaUrls].filter(Boolean);
+  }
+
+  const createdPost = await Post.create(postPayload);
+
+  await Community.findByIdAndUpdate(communityDoc._id, {
+    $inc: { postCount: 1 },
+  });
+
+  const populatedPost = await Post.findById(createdPost._id)
+    .populate({
+      path: "owner",
+      select: "username fullName avatar email",
+    })
+    .populate({
+      path: "community",
+      select: "name slug category",
+    });
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, populatedPost, "Post created successfully")
+    );
 });
 
 const getPostById = asyncHandler(async (req, res) => {
@@ -260,6 +425,10 @@ const updatePost = asyncHandler(async (req, res) => {
 const deletePost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
 
+  if (!req.user?._id) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
   if (!isValidObjectId(postId)) {
     throw new ApiError(400, "Invalid post ID");
   }
@@ -267,6 +436,16 @@ const deletePost = asyncHandler(async (req, res) => {
   const post = await Post.findById(postId);
   if (!post) {
     throw new ApiError(404, "Post not found");
+  }
+
+  if (post.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not allowed to delete this post");
+  }
+
+  if (post.status === "deleted") {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Post already deleted"));
   }
 
   // Soft delete - mark as deleted instead of removing
@@ -645,6 +824,7 @@ const getPostByUser = asyncHandler(async (req, res) => {
 
 export {
   getAllPosts,
+  createPost,
   getPostById,
   updatePost,
   deletePost,
